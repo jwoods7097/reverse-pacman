@@ -16,7 +16,7 @@ if __name__ == '__main__':
     running = True
 
     # Load level
-    game = Level('level1.txt')
+    game = Level('assets/levels/level1.txt')
 
     # Load game objects
     pacman = Pacman(13, 26)
