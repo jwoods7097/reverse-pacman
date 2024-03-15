@@ -8,6 +8,3 @@ def circle(x,y,r):
 
 def square(x,y,w):
     return pygame.Rect(TILE_PIXEL_SIZE*x, TILE_PIXEL_SIZE*y, w, w)
-
-def invoke(event):
-    pygame.event.post(pygame.event.Event(event))

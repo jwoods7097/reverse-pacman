@@ -1,9 +1,11 @@
-import pygame
+from enum import Enum
 
+class Direction(Enum):
+    RIGHT = 0
+    UP = 1
+    LEFT = 2
+    DOWN = 3
+
+LEVEL_WIDTH = 28
+LEVEL_HEIGHT = 36
 TILE_PIXEL_SIZE = 10
-LEVEL_UPDATE = pygame.USEREVENT + 1
-PACMAN_UPDATE = pygame.USEREVENT + 2
-BLINKY_UPDATE = pygame.USEREVENT + 3
-PINKY_UPDATE = pygame.USEREVENT + 4
-INKY_UPDATE = pygame.USEREVENT + 5
-CLYDE_UPDATE = pygame.USEREVENT + 6
