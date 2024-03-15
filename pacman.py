@@ -1,3 +1,4 @@
+from level import Tile
 from globals import Direction, LEVEL_HEIGHT, LEVEL_WIDTH
 import events
 
@@ -6,6 +7,7 @@ class Pacman:
     def __init__(self, start_x, start_y):
         self.x = start_x
         self.y = start_y
+        self.score = 0
 
     def move(self, direction):
         if direction == Direction.RIGHT:
@@ -28,3 +30,12 @@ class Pacman:
             raise ValueError("Invalid movement direction!")
         
         events.invoke(events.LEVEL_UPDATE)
+
+    def eat(self, type):
+        if type == Tile.PELLET:
+            self.score += 10
+        elif type == Tile.POWER_PELLET:
+            self.score += 50
+        elif type == Tile.FRUIT:
+            # TODO: Add multiple types of fruit
+            self.score += 100
