@@ -2,6 +2,7 @@ import pygame
 
 from globals import *
 from level import Level, Tile
+from entity import Direction
 from pacman import Pacman
 import utils
 import events
