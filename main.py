@@ -25,7 +25,7 @@ if __name__ == '__main__':
     events.invoke(events.LEVEL_UPDATE)
 
     # Game loop
-    while running:
+    while running:      
         queue = pygame.event.get()
         for event in queue:
             if event.type == pygame.QUIT:
@@ -37,20 +37,13 @@ if __name__ == '__main__':
                 else:
                     # Pacman movement
                     if event.key == pygame.K_w:
-                        if pacman.y <= 0 or game.board[pacman.y-1, pacman.x] != Tile.WALL:
-                            pacman.move(Direction.UP)
+                        pacman.turn(Direction.UP)
                     if event.key == pygame.K_a:
-                        if pacman.x <= 0 or game.board[pacman.y, pacman.x-1] != Tile.WALL:
-                            pacman.move(Direction.LEFT)
+                        pacman.turn(Direction.LEFT)
                     if event.key == pygame.K_s:
-                        if pacman.y+1 >= LEVEL_HEIGHT or game.board[pacman.y+1, pacman.x] != Tile.WALL:
-                            pacman.move(Direction.DOWN)
+                        pacman.turn(Direction.DOWN)
                     if event.key == pygame.K_d:
-                        if pacman.x+1 >= LEVEL_WIDTH or game.board[pacman.y, pacman.x+1] != Tile.WALL:
-                            pacman.move(Direction.RIGHT)
-
-                    pacman.eat(game.board[pacman.y, pacman.x])
-                    game.board[pacman.y, pacman.x] = Tile.EMPTY
+                        pacman.turn(Direction.RIGHT)
 
             if event.type == events.LEVEL_UPDATE:
                 screen.fill("black")
@@ -74,7 +67,12 @@ if __name__ == '__main__':
                 
                 pygame.display.update()
         
-        clock.tick(30)
+        if utils.can_move(pacman, game):
+            pacman.move()
+            pacman.eat(game.board[pacman.y, pacman.x])
+            game.board[pacman.y, pacman.x] = Tile.EMPTY
+
+        clock.tick(FPS)
 
     pygame.display.quit()
     pygame.quit()
