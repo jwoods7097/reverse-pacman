@@ -31,3 +31,15 @@ class Level:
                         self.board[y, x] = Tile.POWER_PELLET
                     else:
                         raise ValueError('Invalid file formatting')
+                    
+    def __getitem__(self, index):
+        y, x = index
+        if y < 0 or y >= LEVEL_HEIGHT or x < 0 or x >= LEVEL_WIDTH:
+            raise IndexError("Index out of range")
+        return self.board[y, x]
+    
+    def __setitem__(self, index, value):
+        y, x = index
+        if y < 0 or y >= LEVEL_HEIGHT or x < 0 or x >= LEVEL_WIDTH:
+            raise IndexError("Index out of range")
+        self.board[y, x] = value

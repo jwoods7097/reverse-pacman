@@ -67,7 +67,10 @@ class PacmanEnv(gym.Env):
 
     def step(self, action):
         
-
+        if self.pacman.can_move(self.level):
+            self.pacman.move()
+            self.pacman.eat(self.level[self.pacman.y, self.pacman.x])
+            self.level[self.pacman.y, self.pacman.x] = Tile.EMPTY
 
         observation = self._get_obs()
         info = self._get_info()

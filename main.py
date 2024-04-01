@@ -67,10 +67,13 @@ if __name__ == '__main__':
                 
                 pygame.display.update()
         
-        if utils.can_move(pacman, game):
+        if pacman.can_move(game):
             pacman.move()
-            pacman.eat(game.board[pacman.y, pacman.x])
-            game.board[pacman.y, pacman.x] = Tile.EMPTY
+            pacman.eat(game[pacman.y, pacman.x])
+            game[pacman.y, pacman.x] = Tile.EMPTY
+
+            print(f"Rounded: ({pacman.x}, {pacman.y})")
+            print(f"Actual: ({pacman._x}, {pacman._y})\n")
 
         clock.tick(FPS)
 
