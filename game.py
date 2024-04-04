@@ -5,9 +5,11 @@ import gymnasium as gym
 from gymnasium import spaces
 from gymnasium.envs.registration import register
 
-from globals import LEVEL_HEIGHT, LEVEL_WIDTH
+from globals import LEVEL_HEIGHT, LEVEL_WIDTH, TILE_PIXEL_SIZE
 from level import Level, Tile
 from pacman import Pacman
+from entity import Direction
+import utils
 
 register(
     id="PacMan-v0",
@@ -66,10 +68,19 @@ class PacmanEnv(gym.Env):
         return observation, info
 
     def step(self, action):
-        
+        # Process agent action
+        direction = Direction(action)
+        if direction != Direction.NONE:
+            self.pacman.turn(direction)
+
+        # Punish Pacman a bit for not eating pellets
+        reward = -1
+        terminated = False
+
+        # Pacman movement
         if self.pacman.can_move(self.level):
             self.pacman.move()
-            self.pacman.eat(self.level[self.pacman.y, self.pacman.x])
+            reward = self.pacman.eat(self.level[self.pacman.y, self.pacman.x])
             self.level[self.pacman.y, self.pacman.x] = Tile.EMPTY
 
         observation = self._get_obs()
@@ -85,7 +96,34 @@ class PacmanEnv(gym.Env):
             return self._render_frame()
         
     def _render_frame(self):
-        pass
+        # Initialization of pygame objects
+        if self.window is None and self.render_mode == "human":
+            pygame.init()
+            pygame.display.set_caption("Pacman")
+            self.window = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE))
+        if self.clock is None and self.render_mode == "human":
+            self.clock = pygame.time.Clock()
+
+        # Draw background
+        self.window.fill("black")
+
+        # Draw level
+        for y, row in enumerate(self.level.board):
+            for x, tile in enumerate(row):
+                if tile == Tile.WALL:
+                    pygame.draw.rect(self.window, "blue", utils.square(x,y,TILE_PIXEL_SIZE))
+                elif tile == Tile.PELLET:
+                    pygame.draw.circle(self.window, "white", *utils.circle(x,y,TILE_PIXEL_SIZE/5))
+                elif tile == Tile.POWER_PELLET:
+                    pygame.draw.circle(self.window, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
+
+        # Draw pacman
+        pygame.draw.circle(self.window, "yellow", *utils.circle(self.pacman.x,self.pacman.y,TILE_PIXEL_SIZE/2))
+
+        # Update display
+        pygame.event.pump()
+        pygame.display.update()
+        self.clock.tick(self.metadata["render_fps"])
 
     def close(self):
         if self.window is not None:

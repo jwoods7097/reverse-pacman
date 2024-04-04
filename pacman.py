@@ -10,8 +10,11 @@ class Pacman(Entity):
     def eat(self, type):
         if type == Tile.PELLET:
             self.score += 10
+            return 10
         elif type == Tile.POWER_PELLET:
             self.score += 50
+            return 50
         elif type == Tile.FRUIT:
             # TODO: Add multiple types of fruit
             self.score += 100
+            return 100

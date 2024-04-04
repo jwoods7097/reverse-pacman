@@ -16,7 +16,7 @@ class Entity:
     def __init__(self, start_x, start_y):
         self._x = start_x
         self._y = start_y
-        self.speed = 0.9
+        self.speed = 1.0
         self.cur_dir = Direction.NONE
         self.next_dir = Direction.NONE
 
