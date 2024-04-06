@@ -11,6 +11,12 @@ class Direction(Enum):
     LEFT = 3
     DOWN = 4
 
+    @classmethod
+    def opposite(self, direction):
+        if direction == Direction.NONE:
+            return Direction.NONE
+        return Direction(((direction.value - 1 + 2) % 4) + 1)
+
 class Entity:
 
     def __init__(self, start_x, start_y):
@@ -76,3 +82,15 @@ class Entity:
 
     def turn(self, direction):
         self.next_dir = direction
+
+    def get_velocity(self):
+        if self.cur_dir == Direction.RIGHT:
+            return (self.speed, 0)
+        elif self.cur_dir == Direction.UP:
+            return (0, -self.speed)
+        elif self.cur_dir == Direction.LEFT:
+            return (-self.speed, 0)
+        elif self.cur_dir == Direction.DOWN:
+            return (0, self.speed)
+        else:
+            return (0, 0)

@@ -7,5 +7,7 @@ if __name__ == '__main__':
     env.reset()
 
     for i in range(1000):
-        env.step(env.action_space.sample())
+        observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
+        if i % 10 == 0:
+            print(i, info['score'])
 

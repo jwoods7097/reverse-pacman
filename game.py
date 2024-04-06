@@ -8,6 +8,7 @@ from gymnasium.envs.registration import register
 from globals import LEVEL_HEIGHT, LEVEL_WIDTH, TILE_PIXEL_SIZE
 from level import Level, Tile
 from pacman import Pacman
+from ghost import Blinky
 from entity import Direction
 import utils
 
@@ -44,11 +45,29 @@ class PacmanEnv(gym.Env):
         self.window = None
         self.clock = None
 
-    def _get_obs(self):
-        pass
+    def _get_obs(self):  
+        level_obs = np.zeros_like(self.level.board, dtype=object)
+        for y, row in enumerate(self.level.board):
+            for x, tile in enumerate(row):
+                arr = np.zeros(len(Tile), dtype=bool)
+                arr[tile.value] = True
+                level_obs[y, x] = arr
+
+        return {
+                # for entities, we are storing (x, y, v_x, v_y)
+                "pacman": [self.pacman.x, self.pacman.y, *self.pacman.get_velocity()],
+                "blinky": [self.ghosts[0].x, self.ghosts[0].y, *self.ghosts[0].get_velocity()],
+                "inky":   [0,0,0,0],
+                "pinky":  [0,0,0,0],
+                "clyde":  [0,0,0,0],
+                "level":  level_obs
+            }
 
     def _get_info(self):
-        pass
+        return {
+            "step": self.episode_step,
+            "score": self.pacman.score
+        }
 
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random
@@ -56,8 +75,11 @@ class PacmanEnv(gym.Env):
 
         # Game objects
         self.pacman = Pacman(13, 26)
+        self.ghosts = [Blinky(13, 14)]
         
         self.level = Level('assets/levels/level1.txt')
+
+        self.episode_step = 0
 
         observation = self._get_obs()
         info = self._get_info()
@@ -68,6 +90,8 @@ class PacmanEnv(gym.Env):
         return observation, info
 
     def step(self, action):
+        self.episode_step += 1
+
         # Process agent action
         direction = Direction(action)
         if direction != Direction.NONE:
@@ -82,6 +106,11 @@ class PacmanEnv(gym.Env):
             self.pacman.move()
             reward = self.pacman.eat(self.level[self.pacman.y, self.pacman.x])
             self.level[self.pacman.y, self.pacman.x] = Tile.EMPTY
+
+        # Ghost movement
+        for ghost in self.ghosts:
+            ghost.set_dir(self.level, self.pacman.x, self.pacman.y)
+            ghost.move()
 
         observation = self._get_obs()
         info = self._get_info()
@@ -119,6 +148,11 @@ class PacmanEnv(gym.Env):
 
         # Draw pacman
         pygame.draw.circle(self.window, "yellow", *utils.circle(self.pacman.x,self.pacman.y,TILE_PIXEL_SIZE/2))
+
+        # Draw ghosts
+        for ghost in self.ghosts:
+            color = "red"
+            pygame.draw.circle(self.window, color, *utils.circle(ghost.x,ghost.y,TILE_PIXEL_SIZE/2))
 
         # Update display
         pygame.event.pump()
