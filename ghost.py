@@ -41,7 +41,7 @@ class Blinky(Ghost):
 
     def __init__(self, start_x, start_y):
         super().__init__(start_x, start_y)
-        self.speed = 0.9375
+        self.speed = 0.75
         self.scatter_target = (25,0)
 
     def set_dir(self, level, pacman_x, pacman_y):

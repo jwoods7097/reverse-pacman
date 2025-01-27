@@ -44,6 +44,7 @@ class PacmanEnv(gym.Env):
         # Pygame objects
         self.window = None
         self.clock = None
+        self.font = None
 
     def _get_obs(self):  
         level_obs = np.zeros_like(self.level.board, dtype=object)
@@ -132,6 +133,8 @@ class PacmanEnv(gym.Env):
             self.window = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE))
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
+        if self.font is None and self.render_mode == "human":
+            self.font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)
 
         # Draw background
         self.window.fill("black")
@@ -154,6 +157,12 @@ class PacmanEnv(gym.Env):
             color = "red"
             pygame.draw.circle(self.window, color, *utils.circle(ghost.x,ghost.y,TILE_PIXEL_SIZE/2))
 
+        # Draw text
+        score_text = self.font.render(f'Score: {self.pacman.score}', True, 'white')
+        self.window.blit(score_text, (0, 0))
+        step_text = self.font.render(f'Step: {self.episode_step}', True, 'white')
+        self.window.blit(step_text, (0, 12))
+        
         # Update display
         pygame.event.pump()
         pygame.display.update()
@@ -163,3 +172,4 @@ class PacmanEnv(gym.Env):
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
+        exit()
