@@ -24,7 +24,8 @@ if __name__ == '__main__':
     # Load game objects
     pacman = Pacman(13, 26)
     blinky = Blinky(13, 14)
-    inky = Inky(13, 15)
+    clyde = Clyde(15, 14)
+    inky = Inky(14, 14)
     events.invoke(events.LEVEL_UPDATE)
     currentDirection = "none"
     # Game loop
@@ -41,19 +42,15 @@ if __name__ == '__main__':
                     # Pacman movement
                     if event.key == pygame.K_w:
                         pacman.turn(Direction.UP)
-                        currentDirection = "up"
                     if event.key == pygame.K_a:
                         pacman.turn(Direction.LEFT)
-                        currentDirection = "left"
                     if event.key == pygame.K_s:
                         pacman.turn(Direction.DOWN)
-                        currentDirection = "down"
                     if event.key == pygame.K_d:
                         pacman.turn(Direction.RIGHT)
-                        currentDirection = "right"
 
             blinky.set_dir(game, pacman.x, pacman.y)
-
+            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir)
 
             if event.type == events.LEVEL_UPDATE:
                 screen.fill("black")
@@ -72,6 +69,7 @@ if __name__ == '__main__':
                 pygame.draw.circle(screen, "yellow", *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
                 pygame.draw.circle(screen, "red", *utils.circle(blinky.x, blinky.y, TILE_PIXEL_SIZE / 2))
                 pygame.draw.circle(screen, "cyan", *utils.circle(inky.x, inky.y, TILE_PIXEL_SIZE / 2))
+                pygame.draw.circle(screen, "orange", *utils.circle(clyde.x, clyde.y, TILE_PIXEL_SIZE / 2))
                 # Draw text
                 score_text = font.render(f'Score: {pacman.score}', True, 'white')
                 screen.blit(score_text, score_text.get_rect())
@@ -82,16 +80,16 @@ if __name__ == '__main__':
             pacman.move()
             pacman.eat(game[pacman.y, pacman.x])
             game[pacman.y, pacman.x] = Tile.EMPTY
-
             print(f"Rounded: ({pacman.x}, {pacman.y})")
-            print(f"Actual: ({pacman._x}, {pacman._y})\n")
-            print(f"Direction: {currentDirection}")
+            print(f"Direction: {pacman.cur_dir}")
             print(f"blinky: {blinky.x}, {blinky.y}\n")
             print(f"inky: {inky.x}, {inky.y}\n")
         if blinky.can_move(game):
             blinky.move()
         if inky.can_move(game):
             inky.move()
+        if clyde.can_move(game):
+            clyde.move()
         clock.tick(FPS)
 
     pygame.display.quit()
