@@ -98,8 +98,15 @@ if __name__ == '__main__':
         if pinky.can_move(game):
             pinky.move()
 
+        if pacman.x == blinky.x and pacman.y == blinky.y:
+            running = False
+        elif pacman.x == inky.x and pacman.y == inky.y:
+            running = False
+        elif pacman.x == clyde.x and pacman.y == clyde.y:
+            running = False
+        elif pacman.x == pinky.x and pacman.y == pinky.y:
+            running = False
+
         clock.tick(FPS)
 
-    pygame.display.quit()
-    pygame.quit()
     exit()
