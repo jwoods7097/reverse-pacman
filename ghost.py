@@ -52,6 +52,8 @@ class Blinky(Ghost):
             self.set_closest_dir(level, *self.scatter_target)
         else:
             self.cur_dir = random.choice(list(Direction)[1:])
+
+# Blue Ghost
 class Inky(Ghost):
 
     def __init__(self, start_x, start_y):
@@ -59,10 +61,26 @@ class Inky(Ghost):
         self.speed = 0.75
         self.scatter_target = (27, 34)
 
-    def set_dir(self, level, pacman_x, pacman_y):
+    def set_dir(self, level, pacman_x, pacman_y, blinky_x, blinky_y, pacman_dir):
         Ghost.mode = Mode.CHASE
         if Ghost.mode == Mode.CHASE:
-            self.set_closest_dir(level, pacman_x, pacman_y)
+            if pacman_dir == Direction.UP: # Draws a vector from pacman + offset for every direciton to blinky and doubles it.
+                target_x = blinky_x + 2*((pacman_x - 2) - blinky_x)
+                target_y = blinky_y + 2*((pacman_y - 2) - blinky_y)
+            elif pacman_dir == Direction.DOWN:
+                target_x = blinky_x + 2*((pacman_x) - blinky_x)
+                target_y = blinky_y + 2*((pacman_y + 2) - blinky_y)
+            elif pacman_dir == Direction.LEFT:
+                target_x = blinky_x + 2*((pacman_x - 2) - blinky_x)
+                target_y = blinky_y + 2*((pacman_y) - blinky_y)
+            elif pacman_dir == Direction.RIGHT:
+                target_x = blinky_x + 2*((pacman_x + 2) - blinky_x)
+                target_y = blinky_y + 2*((pacman_y) - blinky_y)
+            else:
+                target_x, target_y = self.x, self.y  # Stay in place if no valid direction found
+
+            self.set_closest_dir(level, target_x, target_y)
+
         elif Ghost.mode == Mode.SCATTER:
             self.set_closest_dir(level, *self.scatter_target)
         else:

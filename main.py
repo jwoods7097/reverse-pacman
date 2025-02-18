@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # Load game objects
     pacman = Pacman(13, 26)
     blinky = Blinky(13, 14)
-    inky = Inky(13, 15)
+    inky = Inky(14, 14)
     events.invoke(events.LEVEL_UPDATE)
     currentDirection = "none"
     # Game loop
@@ -53,6 +53,7 @@ if __name__ == '__main__':
                         currentDirection = "right"
 
             blinky.set_dir(game, pacman.x, pacman.y)
+            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir)
 
 
             if event.type == events.LEVEL_UPDATE:
