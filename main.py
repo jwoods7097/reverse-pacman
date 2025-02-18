@@ -4,6 +4,8 @@ from globals import *
 from level import Level, Tile
 from entity import Direction
 from pacman import Pacman
+from ghost import Blinky
+from ghost import Inky
 import utils
 import events
 
@@ -21,9 +23,10 @@ if __name__ == '__main__':
 
     # Load game objects
     pacman = Pacman(13, 26)
-
+    blinky = Blinky(13, 14)
+    inky = Inky(13, 15)
     events.invoke(events.LEVEL_UPDATE)
-
+    currentDirection = "none"
     # Game loop
     while running:      
         queue = pygame.event.get()
@@ -38,12 +41,19 @@ if __name__ == '__main__':
                     # Pacman movement
                     if event.key == pygame.K_w:
                         pacman.turn(Direction.UP)
+                        currentDirection = "up"
                     if event.key == pygame.K_a:
                         pacman.turn(Direction.LEFT)
+                        currentDirection = "left"
                     if event.key == pygame.K_s:
                         pacman.turn(Direction.DOWN)
+                        currentDirection = "down"
                     if event.key == pygame.K_d:
                         pacman.turn(Direction.RIGHT)
+                        currentDirection = "right"
+
+            blinky.set_dir(game, pacman.x, pacman.y)
+
 
             if event.type == events.LEVEL_UPDATE:
                 screen.fill("black")
@@ -58,9 +68,10 @@ if __name__ == '__main__':
                         elif tile == Tile.POWER_PELLET:
                             pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
 
-                # Draw pacman
-                pygame.draw.circle(screen, "yellow", *utils.circle(pacman.x,pacman.y,TILE_PIXEL_SIZE/2))
-
+                # Draw pacman and ghosts
+                pygame.draw.circle(screen, "yellow", *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
+                pygame.draw.circle(screen, "red", *utils.circle(blinky.x, blinky.y, TILE_PIXEL_SIZE / 2))
+                pygame.draw.circle(screen, "cyan", *utils.circle(inky.x, inky.y, TILE_PIXEL_SIZE / 2))
                 # Draw text
                 score_text = font.render(f'Score: {pacman.score}', True, 'white')
                 screen.blit(score_text, score_text.get_rect())
@@ -74,7 +85,13 @@ if __name__ == '__main__':
 
             print(f"Rounded: ({pacman.x}, {pacman.y})")
             print(f"Actual: ({pacman._x}, {pacman._y})\n")
-
+            print(f"Direction: {currentDirection}")
+            print(f"blinky: {blinky.x}, {blinky.y}\n")
+            print(f"inky: {inky.x}, {inky.y}\n")
+        if blinky.can_move(game):
+            blinky.move()
+        if inky.can_move(game):
+            inky.move()
         clock.tick(FPS)
 
     pygame.display.quit()

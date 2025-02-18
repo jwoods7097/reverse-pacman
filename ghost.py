@@ -45,6 +45,22 @@ class Blinky(Ghost):
         self.scatter_target = (25,0)
 
     def set_dir(self, level, pacman_x, pacman_y):
+        Ghost.mode = Mode.CHASE
+        if Ghost.mode == Mode.CHASE:
+            self.set_closest_dir(level, pacman_x, pacman_y)
+        elif Ghost.mode == Mode.SCATTER:
+            self.set_closest_dir(level, *self.scatter_target)
+        else:
+            self.cur_dir = random.choice(list(Direction)[1:])
+class Inky(Ghost):
+
+    def __init__(self, start_x, start_y):
+        super().__init__(start_x, start_y)
+        self.speed = 0.75
+        self.scatter_target = (27, 34)
+
+    def set_dir(self, level, pacman_x, pacman_y):
+        Ghost.mode = Mode.CHASE
         if Ghost.mode == Mode.CHASE:
             self.set_closest_dir(level, pacman_x, pacman_y)
         elif Ghost.mode == Mode.SCATTER:
