@@ -1,7 +1,6 @@
 from enum import Enum
 import math
 import random
-from pacman import Pacman
 from entity import Entity, Direction
 
 class Mode(Enum):
@@ -52,6 +51,8 @@ class Blinky(Ghost):
             self.set_closest_dir(level, *self.scatter_target)
         else:
             self.cur_dir = random.choice(list(Direction)[1:])
+
+
 class Inky(Ghost):
     def __init__(self, start_x, start_y):
         super().__init__(start_x, start_y)
@@ -61,27 +62,72 @@ class Inky(Ghost):
     def set_dir(self, level, pacman_x, pacman_y, blinky_x, blinky_y, pacman_dir):
         Ghost.mode = Mode.CHASE
         if Ghost.mode == Mode.CHASE:
-            if pacman_dir == Direction.UP:
-                calculated_x =
-                calculated_y =
-            self.set_closest_dir(level, calculated_x, calculated_y)
+            if pacman_dir == Direction.UP:  # Draws a vector from pacman + offset for every direciton to blinky and doubles it.
+                target_x = blinky_x + 2 * ((pacman_x - 2) - blinky_x)
+                target_y = blinky_y + 2 * ((pacman_y - 2) - blinky_y)
+            elif pacman_dir == Direction.DOWN:
+                target_x = blinky_x + 2 * (pacman_x - blinky_x)
+                target_y = blinky_y + 2 * ((pacman_y + 2) - blinky_y)
+            elif pacman_dir == Direction.LEFT:
+                target_x = blinky_x + 2 * ((pacman_x - 2) - blinky_x)
+                target_y = blinky_y + 2 * (pacman_y - blinky_y)
+            elif pacman_dir == Direction.RIGHT:
+                target_x = blinky_x + 2 * ((pacman_x + 2) - blinky_x)
+                target_y = blinky_y + 2 * (pacman_y - blinky_y)
+            else:
+                target_x, target_y = self.x, self.y  # Stay in place if no valid direction found
+
+            self.set_closest_dir(level, target_x, target_y)
+            #print(f"Inky target: {target_x}, {target_y}")
         elif Ghost.mode == Mode.SCATTER:
             self.set_closest_dir(level, *self.scatter_target)
         else:
             self.cur_dir = random.choice(list(Direction)[1:])
+
 class Clyde(Ghost):
     def __init__(self, start_x, start_y):
         super().__init__(start_x, start_y)
         self.speed = 0.75
         self.scatter_target = (0, 34)
     def set_dir(self, level, pacman_x, pacman_y, clyde_x, clyde_y):
-        if math.sqrt(math.pow(pacman_x, 2) + math.pow(clyde_x, 2)) >= 8:
+        if math.sqrt(math.pow(pacman_x - clyde_x, 2) + math.pow(pacman_y - clyde_y, 2)) >= 8:
             Ghost.mode = Mode.CHASE
         else:
             Ghost.mode = Mode.SCATTER
 
         if Ghost.mode == Mode.CHASE:
-            self.set_closest_dir(level, , pacman_y)
+            self.set_closest_dir(level, pacman_x, pacman_y)
+        elif Ghost.mode == Mode.SCATTER:
+            self.set_closest_dir(level, *self.scatter_target)
+        else:
+            self.cur_dir = random.choice(list(Direction)[1:])
+
+class Pinky(Ghost):
+    def __init__(self, start_x, start_y):
+        super().__init__(start_x, start_y)
+        self.speed = 0.75
+        self.scatter_target = (0, 0)
+
+    def set_dir(self, level, pacman_x, pacman_y, pacman_dir):
+        Ghost.mode = Mode.CHASE
+        if Ghost.mode == Mode.CHASE:
+            if pacman_dir == Direction.UP:
+                target_x = pacman_x - 4
+                target_y = pacman_y - 4
+            elif pacman_dir == Direction.DOWN:
+                target_x = pacman_x
+                target_y = pacman_y + 4
+            elif pacman_dir == Direction.LEFT:
+                target_x = pacman_x - 4
+                target_y = pacman_y
+            elif pacman_dir == Direction.RIGHT:
+                target_x = pacman_x + 4
+                target_y = pacman_y
+            else:
+                target_x, target_y = self.x, self.y  # Stay in place if no valid direction found
+            self.set_closest_dir(level, target_x, target_y)
+            #print(f"Pinky target: {target_x}, {target_y}")
+            #print(f"Pacman location: {pacman_x}, {pacman_y}")
         elif Ghost.mode == Mode.SCATTER:
             self.set_closest_dir(level, *self.scatter_target)
         else:
