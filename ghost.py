@@ -1,7 +1,7 @@
 from enum import Enum
 import math
 import random
-
+from pacman import Pacman
 from entity import Entity, Direction
 
 class Mode(Enum):
@@ -55,7 +55,6 @@ class Blinky(Ghost):
 
 # Blue Ghost
 class Inky(Ghost):
-
     def __init__(self, start_x, start_y):
         super().__init__(start_x, start_y)
         self.speed = 0.75
@@ -64,6 +63,7 @@ class Inky(Ghost):
     def set_dir(self, level, pacman_x, pacman_y, blinky_x, blinky_y, pacman_dir):
         Ghost.mode = Mode.CHASE
         if Ghost.mode == Mode.CHASE:
+<<<<<<< HEAD
             if pacman_dir == Direction.UP: # Draws a vector from pacman + offset for every direciton to blinky and doubles it.
                 target_x = blinky_x + 2*((pacman_x - 2) - blinky_x)
                 target_y = blinky_y + 2*((pacman_y - 2) - blinky_y)
@@ -81,6 +81,29 @@ class Inky(Ghost):
 
             self.set_closest_dir(level, target_x, target_y)
 
+=======
+            if pacman_dir == Direction.UP:
+                calculated_x =
+                calculated_y =
+            self.set_closest_dir(level, calculated_x, calculated_y)
+>>>>>>> 5d488a00e5ba914060faf95e31282b89149c9c58
+        elif Ghost.mode == Mode.SCATTER:
+            self.set_closest_dir(level, *self.scatter_target)
+        else:
+            self.cur_dir = random.choice(list(Direction)[1:])
+class Clyde(Ghost):
+    def __init__(self, start_x, start_y):
+        super().__init__(start_x, start_y)
+        self.speed = 0.75
+        self.scatter_target = (0, 34)
+    def set_dir(self, level, pacman_x, pacman_y, clyde_x, clyde_y):
+        if math.sqrt(math.pow(pacman_x, 2) + math.pow(clyde_x, 2)) >= 8:
+            Ghost.mode = Mode.CHASE
+        else:
+            Ghost.mode = Mode.SCATTER
+
+        if Ghost.mode == Mode.CHASE:
+            self.set_closest_dir(level, , pacman_y)
         elif Ghost.mode == Mode.SCATTER:
             self.set_closest_dir(level, *self.scatter_target)
         else:
