@@ -1,3 +1,4 @@
+from tkinter import Menu
 import pygame
 
 from globals import *
@@ -5,6 +6,7 @@ from level import Level, Tile
 from entity import Direction
 from pacman import Pacman
 from ghost import Blinky, Clyde, Inky, Pinky
+from gamestate import GameState
 import utils
 import events
 
@@ -14,8 +16,12 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE))
     pygame.display.set_caption("Pacman")
     clock = pygame.time.Clock()
-    font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)
+    score_font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)    
+    title_font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)
+
     running = True
+    state = GameState()
+    state = GameState.MENU
 
     # Load level
     game = Level('assets/levels/level1.txt')
@@ -34,6 +40,17 @@ if __name__ == '__main__':
         for event in queue:
             if event.type == pygame.QUIT:
                 running = False
+
+            if state == GameState.MENU:
+                screen.fill("black")
+                # pygame.draw.rect(screen, "blue", utils.rect(START_BTN_X,START_BTN_Y,START_BTN_W,START_BTN_H))
+                title_text = title_font.render(f'PRESS ANY BUTTON TO START', True, 'white')
+                screen.blit(title_text, title_text.get_rect())
+                pygame.display.update()
+                if event.type == pygame.KEYDOWN:
+                    state = GameState.INGAME
+                continue
+
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
@@ -73,7 +90,7 @@ if __name__ == '__main__':
                 pygame.draw.circle(screen, "orange", *utils.circle(clyde.x, clyde.y, TILE_PIXEL_SIZE / 2))
                 pygame.draw.circle(screen, "pink", *utils.circle(pinky.x, pinky.y, TILE_PIXEL_SIZE / 2))
                 # Draw text
-                score_text = font.render(f'Score: {pacman.score}', True, 'white')
+                score_text = score_font.render(f'Score: {pacman.score}', True, 'white')
                 screen.blit(score_text, score_text.get_rect())
                 
                 pygame.display.update()

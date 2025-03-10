@@ -10,3 +10,6 @@ def circle(x,y,r):
 
 def square(x,y,w):
     return pygame.Rect(TILE_PIXEL_SIZE*x, TILE_PIXEL_SIZE*y, w, w)
+
+def rect(x,y,w,h):
+    return pygame.Rect(TILE_PIXEL_SIZE*x, TILE_PIXEL_SIZE*y, w, h)
