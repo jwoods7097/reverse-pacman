@@ -75,7 +75,6 @@ if __name__ == '__main__':
     # Load game objects
     pacman = Pacman(13, 26)
 
-    
     blinky = Blinky(13, 14)
     clyde = Clyde(13,16)
     inky = Inky(14,16)
@@ -129,9 +128,9 @@ if __name__ == '__main__':
             
             # if we release a ghost, then we have to know what ghost to release next
             # the first one we will always release is pinky, then inky, then clyde
-            if release_ghost_from_prison(next_ghost_out):
+            if next_ghost_out.prison and release_ghost_from_prison(next_ghost_out):
                 if pinky.prison: next_ghost_out = pinky
-                if inky.prison: next_ghost_out = inky
+                elif inky.prison: next_ghost_out = inky
                 elif clyde.prison: next_ghost_out = clyde
 
             # Set ghost movement directions
@@ -153,7 +152,7 @@ if __name__ == '__main__':
                         elif tile == Tile.POWER_PELLET:
                             pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
                         elif tile == Tile.FRUIT:
-                            pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/2.25))
+                            pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/10))
 
                 # Draw pacman and ghosts
                 pygame.draw.circle(screen, pacman.color, *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
