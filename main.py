@@ -49,8 +49,8 @@ if __name__ == '__main__':
                     if event.key == pygame.K_d:
                         pacman.turn(Direction.RIGHT)
 
-            blinky.set_dir(game, pacman.x, pacman.y)
-            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir)
+            blinky.set_dir(game, pacman.x, pacman.y, pacman.energized)
+            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir, pacman)
             clyde.set_dir(game, pacman.x, pacman.y, clyde.x, clyde.y)
             pinky.set_dir(game, pacman.x, pacman.y, pacman.cur_dir)
             if event.type == events.LEVEL_UPDATE:
@@ -68,21 +68,21 @@ if __name__ == '__main__':
 
                 # Draw pacman and ghosts
                 pygame.draw.circle(screen, "yellow", *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
-                pygame.draw.circle(screen, "red", *utils.circle(blinky.x, blinky.y, TILE_PIXEL_SIZE / 2))
-                pygame.draw.circle(screen, "cyan", *utils.circle(inky.x, inky.y, TILE_PIXEL_SIZE / 2))
-                pygame.draw.circle(screen, "orange", *utils.circle(clyde.x, clyde.y, TILE_PIXEL_SIZE / 2))
-                pygame.draw.circle(screen, "pink", *utils.circle(pinky.x, pinky.y, TILE_PIXEL_SIZE / 2))
+                pygame.draw.circle(screen, blinky.color, *utils.circle(blinky.x, blinky.y, TILE_PIXEL_SIZE / 2))
+                pygame.draw.circle(screen, inky.color, *utils.circle(inky.x, inky.y, TILE_PIXEL_SIZE / 2))
+                pygame.draw.circle(screen, clyde.color, *utils.circle(clyde.x, clyde.y, TILE_PIXEL_SIZE / 2))
+                pygame.draw.circle(screen, pinky.color, *utils.circle(pinky.x, pinky.y, TILE_PIXEL_SIZE / 2))
                 # Draw text
                 score_text = font.render(f'Score: {pacman.score}', True, 'white')
                 screen.blit(score_text, score_text.get_rect())
                 
                 pygame.display.update()
-        
+
         if pacman.can_move(game):
             pacman.move()
             pacman.eat(game[pacman.y, pacman.x])
             game[pacman.y, pacman.x] = Tile.EMPTY
-            #print(f"Rounded: ({pacman.x}, {pacman.y})")
+            #print(f"pacman: ({pacman.x}, {pacman.y})")
             #print(f"Direction: {pacman.cur_dir}")
             #print(f"blinky: {blinky.x}, {blinky.y}\n")
             #print(f"inky: {inky.x}, {inky.y}\n")
@@ -106,7 +106,7 @@ if __name__ == '__main__':
             running = False
         elif pacman.x == pinky.x and pacman.y == pinky.y:
             running = False
-
+        tick_counter += 1
         clock.tick(FPS)
 
     exit()
