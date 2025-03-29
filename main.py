@@ -130,6 +130,7 @@ if __name__ == '__main__':
             # if we release a ghost, then we have to know what ghost to release next
             # the first one we will always release is pinky, then inky, then clyde
             if release_ghost_from_prison(next_ghost_out):
+                if pinky.prison: next_ghost_out = pinky
                 if inky.prison: next_ghost_out = inky
                 elif clyde.prison: next_ghost_out = clyde
 
