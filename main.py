@@ -1,5 +1,6 @@
 import pygame
 
+import globals
 from globals import *
 from level import Level, Tile
 from entity import Direction
@@ -50,9 +51,9 @@ if __name__ == '__main__':
                         pacman.turn(Direction.RIGHT)
 
             blinky.set_dir(game, pacman.x, pacman.y, pacman.energized)
-            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir, pacman)
-            clyde.set_dir(game, pacman.x, pacman.y, clyde.x, clyde.y)
-            pinky.set_dir(game, pacman.x, pacman.y, pacman.cur_dir)
+            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir, pacman.energized)
+            clyde.set_dir(game, pacman.x, pacman.y, clyde.x, clyde.y, pacman.energized)
+            pinky.set_dir(game, pacman.x, pacman.y, pacman.cur_dir, pacman.energized)
             if event.type == events.LEVEL_UPDATE:
                 screen.fill("black")
 
@@ -106,7 +107,7 @@ if __name__ == '__main__':
             running = False
         elif pacman.x == pinky.x and pacman.y == pinky.y:
             running = False
-        tick_counter += 1
+        globals.tick_counter += 1
         clock.tick(FPS)
 
     exit()

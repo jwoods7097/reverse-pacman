@@ -1,6 +1,9 @@
 from enum import Enum
 import math
 import random
+
+import globals
+import pacman
 from entity import Entity, Direction
 from globals import *
 from pacman import Pacman
@@ -21,16 +24,29 @@ class Ghost(Entity):
         self.scatter_target = (0, 0)
         self.init_color = init_color
         self.color = self.init_color
+        self.temp_timer = None
 
     def update_color(self):
         if self.mode == Mode.FRIGHTENED:
-            temp_timer = tick_counter
-            if (tick_counter - temp_timer) > 7 and (temp_timer - tick_counter) % 2 == 1:
+            if self.temp_timer is None:
+                self.temp_timer = globals.tick_counter
+                print("set")
+                print(globals.tick_counter)
+                print(self.temp_timer)
+            if (globals.tick_counter - self.temp_timer) > 7 and (self.temp_timer - globals.tick_counter) % 2 == 1:
                 self.color = "white"
             else:
                 self.color = "blue"
+
+            print(globals.tick_counter - self.temp_timer)
+            if globals.tick_counter - self.temp_timer >= 12:
+                self.mode = Mode.CHASE
+                Pacman.energized = False
         else:
             self.color = self.init_color
+            self.temp_timer = None
+
+
 
     # Gets the direction that would put the ghost closest to the point (x, y)
     def set_closest_dir(self, level, x, y):
@@ -63,9 +79,9 @@ class Blinky(Ghost):
     def set_dir(self, level, pacman_x, pacman_y, energized):
         if energized:
             self.mode = Mode.FRIGHTENED
-            self.update_color()
         else:
             self.mode = Mode.CHASE
+        self.update_color()
 
         if self.mode == Mode.CHASE:
             self.set_closest_dir(level, pacman_x, pacman_y)
@@ -86,7 +102,8 @@ class Inky(Ghost):
         if energized:
             self.mode = Mode.FRIGHTENED
         else:
-            set.mode = Mode.CHASE
+            self.mode = Mode.CHASE
+        self.update_color()
 
         if self.mode == Mode.CHASE:
             if pacman_dir == Direction.UP:  # Draws a vector from pacman + offset for every direciton to blinky and doubles it.
@@ -119,18 +136,21 @@ class Clyde(Ghost):
         self.scatter_target = (0, 34)
         self.color = "orange"
 
-    def set_dir(self, level, pacman_x, pacman_y, clyde_x, clyde_y):
+    def set_dir(self, level, pacman_x, pacman_y, clyde_x, clyde_y, energized):
 
         if math.sqrt(math.pow(pacman_x - clyde_x, 2) + math.pow(pacman_y - clyde_y, 2)) >= 8:
             self.mode = Mode.CHASE
         else:
             self.mode = Mode.SCATTER
+        if energized:
+            self.mode = Mode.FRIGHTENED
+        self.update_color()
 
-        if Ghost.mode == Mode.CHASE:
+        if self.mode == Mode.CHASE:
             self.set_closest_dir(level, pacman_x, pacman_y)
-        elif Ghost.mode == Mode.SCATTER:
+        elif self.mode == Mode.SCATTER:
             self.set_closest_dir(level, *self.scatter_target)
-        elif Ghost.mode == Mode.FRIGHTENED:
+        elif self.mode == Mode.FRIGHTENED:
             self.cur_dir = random.choice(list(Direction)[1:])
 
 
@@ -141,9 +161,14 @@ class Pinky(Ghost):
         self.scatter_target = (0, 0)
         self.color = "pink"
 
-    def set_dir(self, level, pacman_x, pacman_y, pacman_dir):
+    def set_dir(self, level, pacman_x, pacman_y, pacman_dir, energized):
+        if energized:
+            self.mode = Mode.FRIGHTENED
+        else:
+            self.mode = Mode.CHASE
+        self.update_color()
 
-        if Ghost.mode == Mode.CHASE:
+        if self.mode == Mode.CHASE:
             if pacman_dir == Direction.UP:
                 target_x = pacman_x - 4
                 target_y = pacman_y - 4
@@ -161,7 +186,7 @@ class Pinky(Ghost):
             self.set_closest_dir(level, target_x, target_y)
             #print(f"Pinky target: {target_x}, {target_y}")
             #print(f"Pacman location: {pacman_x}, {pacman_y}")
-        elif Ghost.mode == Mode.SCATTER:
+        elif self.mode == Mode.SCATTER:
             self.set_closest_dir(level, *self.scatter_target)
-        elif Ghost.mode == Mode.FRIGHTENED:
+        elif self.mode == Mode.FRIGHTENED:
             self.cur_dir = random.choice(list(Direction)[1:])
