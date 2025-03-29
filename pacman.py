@@ -32,3 +32,5 @@ class Pacman(Entity):
             # TODO: Add multiple types of fruit
             self.score += 100
             return 100
+        else:
+            return 0
