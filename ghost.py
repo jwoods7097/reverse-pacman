@@ -99,7 +99,7 @@ class Inky(Ghost):
         self.speed = 1.0
         self.scatter_target = (27, 34)
         self.color = "cyan"
-        self.pellet_max = 30
+        self.pellet_max = 10
 
     def set_dir(self, level, pacman_x, pacman_y, blinky_x, blinky_y, pacman_dir):
         if Ghost.mode == Mode.CHASE:
@@ -129,7 +129,7 @@ class Clyde(Ghost):
         self.speed = 1.0
         self.scatter_target = (0, 34)
         self.color = "orange"
-        self.pellet_max = 60
+        self.pellet_max = 10
 
     def set_dir(self, level, pacman_x, pacman_y):
         if Ghost.mode == Mode.CHASE:

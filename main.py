@@ -28,14 +28,26 @@ def place_ghosts(ghosts):
     # outside and on top
     (ghosts["blinky"].x, ghosts["blinky"].y) = GHOST_LEAVE_POS
     ghosts["blinky"].prison = False
+    ghosts["inky"].pellet_count = 0
 
     (ghosts["inky"].x, ghosts["inky"].y) = (13,16)
+    ghosts["inky"].prison = True
+    ghosts["inky"].pellet_count = 0
     (ghosts["clyde"].x, ghosts["clyde"].y) = (14,16)
+    ghosts["clyde"].prison = True
+    ghosts["clyde"].pellet_count = 0
     (ghosts["pinky"].x, ghosts["pinky"].y) = (15,16)
+    ghosts["pinky"].prison = True
+    ghosts["pinky"].pellet_count = 0
 
 def on_collide_handler(ghosts):
+    # move ghosts
     place_ghosts(ghosts)
-    pass
+    # reset pellet counts
+    ghosts_list = [ghosts[key] for key in ghosts.keys()]
+    for ghost in ghosts_list:
+        ghost.pellet_count = 0
+
 def on_fright_collide_handler(ghosts):
     pass
 
@@ -43,6 +55,7 @@ def release_ghost_from_prison(next_ghost):
     if next_ghost.pellet_count >= next_ghost.pellet_max:
         (next_ghost.x, next_ghost.y) = GHOST_LEAVE_POS
         next_ghost.prison = False
+        next_ghost.next_dir = Direction.DOWN
         return True
     else:
         return False
@@ -115,6 +128,12 @@ if __name__ == '__main__':
 
             print(time_elapsed, Ghost.mode)
             
+            # if we release a ghost, then we have to know what ghost to release next
+            # the first one we will always release is pinky, then inky, then clyde
+            if release_ghost_from_prison(next_ghost_out):
+                if inky.prison: next_ghost_out = inky
+                elif clyde.prison: next_ghost_out = clyde
+
             # Set ghost movement directions
             blinky.set_dir(game, pacman.x, pacman.y)
             inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir)
@@ -176,11 +195,7 @@ if __name__ == '__main__':
                 on_collide_handler(ghosts)
                 next_ghost_out = pinky
         
-        # if we release a ghost, then we have to know what ghost to release next
-        # the first one we will always release is pinky, then inky, then clyde
-        if release_ghost_from_prison(next_ghost_out):
-            if inky.prison: next_ghost_out = inky
-            elif clyde.prison: next_ghost_out = clyde
+        
         
         tick_counter += 1
         clock.tick(FPS)
