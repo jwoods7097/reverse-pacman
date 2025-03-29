@@ -28,7 +28,7 @@ class Ghost(Entity):
 
     def update_color(self):
         if self.mode == Mode.FRIGHTENED:
-            if self.temp_timer is None:
+            if self.temp_timer == -1:
                 self.temp_timer = globals.tick_counter
                 print("set")
                 print(globals.tick_counter)
@@ -38,13 +38,14 @@ class Ghost(Entity):
             else:
                 self.color = "blue"
 
-            print(globals.tick_counter - self.temp_timer)
-            if globals.tick_counter - self.temp_timer >= 12:
+            #print(globals.tick_counter - self.temp_timer)
+            if globals.tick_counter - self.temp_timer >= 13:
+                print("theory only gets you so far")
                 self.mode = Mode.CHASE
-                Pacman.energized = False
+                globals.energized = False
         else:
             self.color = self.init_color
-            self.temp_timer = None
+            self.temp_timer = -1
 
 
 

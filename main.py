@@ -50,10 +50,11 @@ if __name__ == '__main__':
                     if event.key == pygame.K_d:
                         pacman.turn(Direction.RIGHT)
 
-            blinky.set_dir(game, pacman.x, pacman.y, pacman.energized)
-            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir, pacman.energized)
-            clyde.set_dir(game, pacman.x, pacman.y, clyde.x, clyde.y, pacman.energized)
-            pinky.set_dir(game, pacman.x, pacman.y, pacman.cur_dir, pacman.energized)
+            blinky.set_dir(game, pacman.x, pacman.y, globals.energized)
+            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir, globals.energized)
+            clyde.set_dir(game, pacman.x, pacman.y, clyde.x, clyde.y, globals.energized)
+            pinky.set_dir(game, pacman.x, pacman.y, pacman.cur_dir, globals.energized)
+
             if event.type == events.LEVEL_UPDATE:
                 screen.fill("black")
 
