@@ -51,6 +51,9 @@ def on_collide_handler(ghosts):
 def on_fright_collide_handler(ghosts):
     pass
 
+def animate_death_pacman():
+    pass # Tim this is for you
+
 def release_ghost_from_prison(next_ghost):
     if next_ghost.pellet_count >= next_ghost.pellet_max:
         (next_ghost.x, next_ghost.y) = GHOST_LEAVE_POS
@@ -165,6 +168,10 @@ if __name__ == '__main__':
                 # Draw text
                 score_text = font.render(f'Score: {pacman.score}', True, 'white')
                 screen.blit(score_text, score_text.get_rect())
+
+                # Draw life counter
+                lives = lives = font.render("Lives : " + str(playerLives), True, (255, 255, 255))
+                screen.blit.circle(screen, pacman.color, *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
                 
                 pygame.display.update()
 
@@ -198,7 +205,9 @@ if __name__ == '__main__':
             elif collide:
                 on_collide_handler(ghosts)
                 next_ghost_out = pinky
-        
+                animate_death_pacman()
+                pacman.lives -= 1
+
         
         
         tick_counter += 1

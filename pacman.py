@@ -11,6 +11,7 @@ class Pacman(Entity):
         self.timer = 0
         self.color = "yellow"
         self._dotsEaten = 0
+        self.lives = 3
 
     @property
     def energized(self):
