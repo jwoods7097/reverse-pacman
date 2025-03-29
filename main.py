@@ -20,7 +20,6 @@ def detect_collision(circle_A, circle_B):
     dy = (circle_A.y - circle_B.y)*TILE_PIXEL_SIZE
     distance = math.sqrt(dx * dx + dy * dy)
     universal_radius = TILE_PIXEL_SIZE/2
-    print(f"Distance: {distance}, Radiusx2: {universal_radius}")
 
     colliding = distance < (2 * universal_radius)
     return colliding
@@ -28,6 +27,7 @@ def detect_collision(circle_A, circle_B):
 def place_ghosts(ghosts):
     # outside and on top
     (ghosts["blinky"].x, ghosts["blinky"].y) = GHOST_LEAVE_POS
+    ghosts["blinky"].prison = False
 
     (ghosts["inky"].x, ghosts["inky"].y) = (13,16)
     (ghosts["clyde"].x, ghosts["clyde"].y) = (14,16)
@@ -39,6 +39,13 @@ def on_collide_handler(ghosts):
 def on_fright_collide_handler(ghosts):
     pass
 
+def release_ghost_from_prison(next_ghost):
+    if next_ghost.pellet_count >= next_ghost.pellet_max:
+        (next_ghost.x, next_ghost.y) = GHOST_LEAVE_POS
+        next_ghost.prison = False
+        return True
+    else:
+        return False
 
 if __name__ == '__main__':
     # pygame setup
@@ -60,10 +67,10 @@ if __name__ == '__main__':
     clyde = Clyde(13,16)
     inky = Inky(14,16)
     pinky = Pinky(15,16)
+    next_ghost_out = pinky
     ghosts = { "blinky": blinky, "inky": inky, "clyde": clyde, "pinky": pinky }
 
     events.invoke(events.LEVEL_UPDATE)
-    currentDirection = "none"
     # Game loop
     while running:      
         queue = pygame.event.get()
@@ -116,7 +123,9 @@ if __name__ == '__main__':
 
         if pacman.can_move(game):
             pacman.move()
-            pacman.eat(game[pacman.y, pacman.x])
+            score_added = pacman.eat(game[pacman.y, pacman.x])
+            if score_added > 0:
+                next_ghost_out.pellet_count_up()
             game[pacman.y, pacman.x] = Tile.EMPTY
             #DEBUG PRINTS
             #print(f"pacman: ({pacman.x}, {pacman.y})")
@@ -136,7 +145,6 @@ if __name__ == '__main__':
             pinky.move()
 
         # Detect collisions
-        
         for key in ghosts.keys():
             ghost = ghosts[key]
             collide = detect_collision(pacman, ghost)
@@ -145,16 +153,14 @@ if __name__ == '__main__':
                 on_fright_collide_handler(ghosts)
             elif collide:
                 on_collide_handler(ghosts)
+                next_ghost_out = pinky
         
-        # old collision detection        
-        # if pacman.x == blinky.x and pacman.y == blinky.y:
-        #     running = False
-        # elif pacman.x == inky.x and pacman.y == inky.y:
-        #     running = False
-        # elif pacman.x == clyde.x and pacman.y == clyde.y:
-        #     running = False
-        # elif pacman.x == pinky.x and pacman.y == pinky.y:
-        #     running = False
+        # if we release a ghost, then we have to know what ghost to release next
+        # the first one we will always release is pinky, then inky, then clyde
+        if release_ghost_from_prison(next_ghost_out):
+            if inky.prison: next_ghost_out = inky
+            elif clyde.prison: next_ghost_out = clyde
+        
         tick_counter += 1
         clock.tick(FPS)
 
