@@ -5,17 +5,14 @@ from globals import LEVEL_HEIGHT, LEVEL_WIDTH
 import events
 
 class Direction(Enum):
-    NONE = 0
-    RIGHT = 1
-    UP = 2
-    LEFT = 3
-    DOWN = 4
+    RIGHT = 0
+    UP = 1
+    LEFT = 2
+    DOWN = 3
 
     @classmethod
     def opposite(self, direction):
-        if direction == Direction.NONE:
-            return Direction.NONE
-        return Direction(((direction.value - 1 + 2) % 4) + 1)
+        return Direction((direction.value + 2) % 4)
 
 class Entity:
 
@@ -25,6 +22,9 @@ class Entity:
         self.speed = 1.0
         self.cur_dir = Direction.NONE
         self.next_dir = Direction.NONE
+        self.cur_dir = Direction.LEFT
+        self.next_dir = Direction.LEFT
+        self.color = "white"
 
     @property
     def x(self):
@@ -41,6 +41,14 @@ class Entity:
     @y.setter
     def y(self, value):
         self._y = value
+
+    @property
+    def color(self):
+        return self._color
+
+    @color.setter
+    def color(self, value):
+        self._color = value
 
     def check_direction(self, level, direction):
         if direction == Direction.UP:
