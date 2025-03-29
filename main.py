@@ -84,6 +84,7 @@ if __name__ == '__main__':
     ghosts = { "blinky": blinky, "inky": inky, "clyde": clyde, "pinky": pinky }
 
     events.invoke(events.LEVEL_UPDATE)
+
     # Game loop
     while running:      
         queue = pygame.event.get()
@@ -125,8 +126,6 @@ if __name__ == '__main__':
                 Ghost.mode = Mode.SCATTER
             else:
                 Ghost.mode = Mode.CHASE
-
-            print(time_elapsed, Ghost.mode)
             
             # if we release a ghost, then we have to know what ghost to release next
             # the first one we will always release is pinky, then inky, then clyde
@@ -152,6 +151,8 @@ if __name__ == '__main__':
                             pygame.draw.circle(screen, "white", *utils.circle(x,y,TILE_PIXEL_SIZE/5))
                         elif tile == Tile.POWER_PELLET:
                             pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
+                        elif tile == Tile.FRUIT:
+                            pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/2.25))
 
                 # Draw pacman and ghosts
                 pygame.draw.circle(screen, pacman.color, *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
@@ -173,6 +174,8 @@ if __name__ == '__main__':
             if score_added > 0:
                 next_ghost_out.pellet_count_up()
             game[pacman.y, pacman.x] = Tile.EMPTY
+            if (pacman._dotsEaten == 70 or pacman._dotsEaten == 170):
+                game.board[20, 13] = Tile.FRUIT
 
         # Move ghosts
         if blinky.can_move(game):
