@@ -15,6 +15,7 @@ class Mode(Enum):
 # Base Ghost class, do not instantiate
 class Ghost(Entity):
     mode = Mode.SCATTER
+    fright = False
 
     def __init__(self, start_x, start_y, init_color):
         super().__init__(start_x, start_y)
@@ -49,6 +50,11 @@ class Ghost(Entity):
 
         # Set direction to closest distance to point
         self.cur_dir = min(distances, key=distances.get)
+    def get_fright(self):
+        if self.mode == Mode.FRIGHTENED:
+            self.fright = True
+        return self.fright
+
 
 
 # Red Ghost
