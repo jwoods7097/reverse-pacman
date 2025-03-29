@@ -139,7 +139,7 @@ class Clyde(Ghost):
                 self.set_closest_dir(level, *self.scatter_target)
         elif Ghost.mode == Mode.SCATTER:
             self.set_closest_dir(level, *self.scatter_target)
-        elif Ghost.mode == Mode.FRIGHTENED:
+        else:
             self.turn_random_dir(level)
 
 

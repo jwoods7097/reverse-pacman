@@ -10,7 +10,8 @@ class Pacman(Entity):
         self._energized = False
         self.timer = 0
         self.color = "yellow"
-    
+        self._dotsEaten = 0
+
     @property
     def energized(self):
         return self._energized
@@ -19,17 +20,20 @@ class Pacman(Entity):
     def energized(self, is_energized):
         self._energized = is_energized
 
-    def eat(self, type):
-        if type == Tile.PELLET:
+    def dotsEaten(self):
+        return self._dotsEaten
+
+    def eat(self, tile_type):
+        if tile_type == Tile.PELLET:
             self.score += 10
+            self._dotsEaten += 1
             return 10
-        elif type == Tile.POWER_PELLET:
+        elif tile_type == Tile.POWER_PELLET:
             self.score += 50
             self.timer = tick_counter
             self.energized = True
             return 50
-        elif type == Tile.FRUIT:
-            # TODO: Add multiple types of fruit
+        elif tile_type == Tile.FRUIT:
             self.score += 100
             return 100
         else:
