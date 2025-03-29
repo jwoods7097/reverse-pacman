@@ -2,13 +2,15 @@ from entity import Entity
 from level import Tile
 from globals import *
 
-#from ghost import Clyde, Blinky, Inky, Pinky, Mode
 class Pacman(Entity):
+    
     def __init__(self, start_x, start_y):
         super().__init__(start_x, start_y)
         self.score = 0
         self._energized = False
         self.timer = 0
+        self.color = "yellow"
+    
     @property
     def energized(self):
         return self._energized

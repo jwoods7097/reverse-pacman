@@ -95,8 +95,7 @@ class PacmanEnv(gym.Env):
 
         # Process agent action
         direction = Direction(action)
-        if direction != Direction.NONE:
-            self.pacman.turn(direction)
+        self.pacman.turn(direction)
 
         # Punish Pacman a bit for not eating pellets
         reward = -1
