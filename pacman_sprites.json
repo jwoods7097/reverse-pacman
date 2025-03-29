@@ -4,42 +4,42 @@
       "x": 0,"y": 0,"w": 10,"h": 10
     }
   },
-  "pacman_right1.png": {
+  "pacman_01.png": {
     "frame": {
       "x": 10,"y": 0,"w": 10,"h": 10
     }
   },
-  "pacman_right2.png": {
+  "pacman_02.png": {
     "frame": {
       "x": 20,"y": 0,"w": 10,"h": 10
     }
   },
-  "pacman_left1.png": {
+  "pacman_21.png": {
     "frame": {
       "x": 30,"y": 0,"w": 10,"h": 10
     }
   },
-  "pacman_left2.png": {
+  "pacman_22.png": {
     "frame": {
       "x": 40,"y": 0,"w": 10,"h": 10
     }
   },
-  "pacman_down1.png": {
+  "pacman_31.png": {
     "frame": {
       "x": 50,"y": 0,"w": 10,"h": 10
     }
   },
-  "pacman_down2.png": {
+  "pacman_32.png": {
     "frame": {
       "x": 60,"y": 0,"w": 10,"h": 10
     }
   },
-  "pacman_up1.png": {
+  "pacman_11.png": {
     "frame": {
       "x": 70,"y": 0,"w": 10,"h": 10
     }
   },
-  "pacman_up2.png": {
+  "pacman_12.png": {
     "frame": {
       "x": 80,"y": 0,"w": 10,"h": 10
     }
