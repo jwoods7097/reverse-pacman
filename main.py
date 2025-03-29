@@ -8,7 +8,7 @@ from ghost import Ghost, Mode, Blinky, Clyde, Inky, Pinky
 import utils
 import events
 import math
-
+import time
 def detect_collision(circle_A, circle_B):
     """
     Return boolean if colliding
@@ -169,9 +169,8 @@ if __name__ == '__main__':
                 screen.blit(score_text, score_text.get_rect())
 
                 # Draw life counter
-                lives = lives = font.render("Lives : " + str(playerLives), True, (255, 255, 255))
-                screen.blit.circle(screen, pacman.color, *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
-                
+                lives_text = font.render("Lives : " + str(pacman.lives), True, pacman.color)
+                screen.blit(lives_text,(10*TILE_PIXEL_SIZE,0))                
                 pygame.display.update()
 
         # Move pacman
@@ -206,6 +205,11 @@ if __name__ == '__main__':
                 next_ghost_out = pinky
                 animate_death_pacman()
                 pacman.lives -= 1
+                if pacman.lives == 0:
+                    game_over_text = font.render("---GAME OVER---", True, "red")
+                    screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
+                    time.sleep(10)
+                    running = False
 
         
         
