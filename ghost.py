@@ -39,10 +39,10 @@ class Ghost(Entity):
     def set_closest_dir(self, level, x, y):
         # Compute all distances
         distances = {
-            Direction.RIGHT: math.dist([self.x + 1, self.y], [x, y]),
             Direction.UP: math.dist([self.x, self.y - 1], [x, y]),
             Direction.LEFT: math.dist([self.x - 1, self.y], [x, y]),
-            Direction.DOWN: math.dist([self.x, self.y + 1], [x, y])
+            Direction.DOWN: math.dist([self.x, self.y + 1], [x, y]),
+            Direction.RIGHT: math.dist([self.x + 1, self.y], [x, y])
         }
 
         # Filter out invalid movement directions
