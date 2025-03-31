@@ -14,12 +14,16 @@ class Mode(Enum):
 # Base Ghost class, do not instantiate
 class Ghost(Entity):
     mode = Mode.SCATTER
+    fright = False
 
     def __init__(self, start_x, start_y, init_color):
         super().__init__(start_x, start_y)
         self.scatter_target = (0, 0)
         self.init_color = init_color
         self.color = self.init_color
+        self.pellet_count = 0
+        self.pellet_max = 0
+        self.prison = True
 
     def update_color(self):
         if Ghost.mode == Mode.FRIGHTENED:
@@ -59,6 +63,17 @@ class Ghost(Entity):
 
         self.turn(random.choice(directions))
 
+    def get_fright(self):
+        if self.mode == Mode.FRIGHTENED:
+            self.fright = True
+        return self.fright
+    
+    def get_pellet_count(self):
+        return self.pellet_count
+    
+    def pellet_count_up(self):
+        self.pellet_count += 1
+
 
 # Red Ghost
 class Blinky(Ghost):
@@ -84,6 +99,7 @@ class Inky(Ghost):
         self.speed = 1.0
         self.scatter_target = (27, 34)
         self.color = "cyan"
+        self.pellet_max = 30
 
     def set_dir(self, level, pacman_x, pacman_y, blinky_x, blinky_y, pacman_dir):
         if Ghost.mode == Mode.CHASE:
@@ -113,6 +129,7 @@ class Clyde(Ghost):
         self.speed = 1.0
         self.scatter_target = (0, 34)
         self.color = "orange"
+        self.pellet_max = 60
 
     def set_dir(self, level, pacman_x, pacman_y):
         if Ghost.mode == Mode.CHASE:
@@ -122,7 +139,7 @@ class Clyde(Ghost):
                 self.set_closest_dir(level, *self.scatter_target)
         elif Ghost.mode == Mode.SCATTER:
             self.set_closest_dir(level, *self.scatter_target)
-        elif Ghost.mode == Mode.FRIGHTENED:
+        else:
             self.turn_random_dir(level)
 
 
@@ -132,6 +149,7 @@ class Pinky(Ghost):
         self.speed = 1.0
         self.scatter_target = (2, 0)
         self.color = "pink"
+        self.pellet_max = 5
 
     def set_dir(self, level, pacman_x, pacman_y, pacman_dir):
         if Ghost.mode == Mode.CHASE:

@@ -8,6 +8,45 @@ from pacman import Pacman
 from ghost import Ghost, Mode, Blinky, Clyde, Inky, Pinky
 import utils
 import events
+import math
+
+def detect_collision(circle_A, circle_B):
+    """
+    Return boolean if colliding
+
+    If euclidian distance from two circles is shorter than their radii combined
+    then they must be colliding.
+    """
+    dx = (circle_A.x - circle_B.x)*TILE_PIXEL_SIZE
+    dy = (circle_A.y - circle_B.y)*TILE_PIXEL_SIZE
+    distance = math.sqrt(dx * dx + dy * dy)
+    universal_radius = TILE_PIXEL_SIZE/2
+
+    colliding = distance < (2 * universal_radius)
+    return colliding
+
+def place_ghosts(ghosts):
+    # outside and on top
+    (ghosts["blinky"].x, ghosts["blinky"].y) = GHOST_LEAVE_POS
+    ghosts["blinky"].prison = False
+
+    (ghosts["inky"].x, ghosts["inky"].y) = (13,16)
+    (ghosts["clyde"].x, ghosts["clyde"].y) = (14,16)
+    (ghosts["pinky"].x, ghosts["pinky"].y) = (15,16)
+
+def on_collide_handler(ghosts):
+    place_ghosts(ghosts)
+    pass
+def on_fright_collide_handler(ghosts):
+    pass
+
+def release_ghost_from_prison(next_ghost):
+    if next_ghost.pellet_count >= next_ghost.pellet_max:
+        (next_ghost.x, next_ghost.y) = GHOST_LEAVE_POS
+        next_ghost.prison = False
+        return True
+    else:
+        return False
 
 if __name__ == '__main__':
     # pygame setup
@@ -23,10 +62,13 @@ if __name__ == '__main__':
 
     # Load game objects
     pacman = Pacman(13, 26)
+
     blinky = Blinky(13, 14)
-    clyde = Clyde(15, 14)
-    inky = Inky(14, 14)
-    pinky = Pinky(16, 14)
+    clyde = Clyde(13,16)
+    inky = Inky(14,16)
+    pinky = Pinky(15,16)
+    next_ghost_out = pinky
+    ghosts = { "blinky": blinky, "inky": inky, "clyde": clyde, "pinky": pinky }
 
 
     sprite_sheet = Spritesheet("pacman_sprites.png")
@@ -94,8 +136,6 @@ if __name__ == '__main__':
             else:
                 Ghost.mode = Mode.CHASE
 
-            print(time_elapsed, Ghost.mode)
-
             # Set ghost movement directions
             blinky.set_dir(game, pacman.x, pacman.y)
             inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir)
@@ -114,16 +154,13 @@ if __name__ == '__main__':
                             pygame.draw.circle(screen, "white", *utils.circle(x,y,TILE_PIXEL_SIZE/5))
                         elif tile == Tile.POWER_PELLET:
                             pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
+                        elif tile == Tile.FRUIT:
+                            pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/2.25))
 
                 # Draw pacman
-                #pygame.draw.circle(screen, "yellow", *utils.circle(pacman.x,pacman.y,TILE_PIXEL_SIZE/2))
                 screen.blit(pacman_image_data[pacman.cur_dir][motion_index], (TILE_PIXEL_SIZE*pacman.x, TILE_PIXEL_SIZE*pacman.y))
 
                 # Draw pacman and ghosts
-                #pygame.draw.circle(screen, blinky.color, *utils.circle(blinky.x, blinky.y, TILE_PIXEL_SIZE / 2))
-                #pygame.draw.circle(screen, inky.color, *utils.circle(inky.x, inky.y, TILE_PIXEL_SIZE / 2))
-                #pygame.draw.circle(screen, clyde.color, *utils.circle(clyde.x, clyde.y, TILE_PIXEL_SIZE / 2))
-                #pygame.draw.circle(screen, pinky.color, *utils.circle(pinky.x, pinky.y, TILE_PIXEL_SIZE / 2))
 
                 screen.blit(ghost_image_data['blinky'][blinky.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*blinky.x, TILE_PIXEL_SIZE*blinky.y))
                 screen.blit(ghost_image_data['inky'][inky.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*inky.x, TILE_PIXEL_SIZE*inky.y))
@@ -150,8 +187,12 @@ if __name__ == '__main__':
         # Move pacman
         if pacman.can_move(game):
             pacman.move()
-            pacman.eat(game[pacman.y, pacman.x])
+            score_added = pacman.eat(game[pacman.y, pacman.x])
+            if score_added > 0:
+                next_ghost_out.pellet_count_up()
             game[pacman.y, pacman.x] = Tile.EMPTY
+            if (pacman._dotsEaten == 70 or pacman._dotsEaten == 170):
+                game.board[20, 13] = Tile.FRUIT
 
         # Move ghosts
         if blinky.can_move(game):
@@ -163,16 +204,23 @@ if __name__ == '__main__':
         if pinky.can_move(game):
             pinky.move()
 
-        # Kill pacman and end game if it runs into a ghost
-        if pacman.x == blinky.x and pacman.y == blinky.y:
-            running = False
-        elif pacman.x == inky.x and pacman.y == inky.y:
-            running = False
-        elif pacman.x == clyde.x and pacman.y == clyde.y:
-            running = False
-        elif pacman.x == pinky.x and pacman.y == pinky.y:
-            running = False
+        # Detect collisions
+        for key in ghosts.keys():
+            ghost = ghosts[key]
+            collide = detect_collision(pacman, ghost)
 
+            if collide and ghost.get_fright():
+                on_fright_collide_handler(ghosts)
+            elif collide:
+                on_collide_handler(ghosts)
+                next_ghost_out = pinky
+
+        # if we release a ghost, then we have to know what ghost to release next
+        # the first one we will always release is pinky, then inky, then clyde
+        if release_ghost_from_prison(next_ghost_out):
+            if inky.prison: next_ghost_out = inky
+            elif clyde.prison: next_ghost_out = clyde
+        
         tick_counter += 1
         clock.tick(FPS)
 
