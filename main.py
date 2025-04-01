@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
 
     sprite_sheet = Spritesheet("pacman_sprites.png")
-    ghost_sprite_sheet = Spritesheet("ghost_sprites.png")
+    ghost_fruit_sprite_sheet = Spritesheet("ghost_fruit_sprites.png")
     base_state = sprite_sheet.parse_sprite("pacman_s.png")
     pacman_image_data = {Direction.RIGHT: [base_state], Direction.LEFT: [base_state], Direction.DOWN: [base_state], Direction.UP: [base_state]}
     ghost_image_data = {'blinky': {Direction.RIGHT: [], Direction.LEFT: [], Direction.DOWN: [], Direction.UP: []},
@@ -86,7 +86,9 @@ if __name__ == '__main__':
 
         for name in ['blinky', 'inky', 'pinky', 'clyde']:
             for dir in [Direction.RIGHT, Direction.LEFT, Direction.DOWN, Direction.UP]:
-                ghost_image_data[name][dir].append(ghost_sprite_sheet.parse_sprite(f"{name}_{dir.value}{i+1}.png"))
+                ghost_image_data[name][dir].append(ghost_fruit_sprite_sheet.parse_sprite(f"{name}_{dir.value}{i + 1}.png"))
+
+    cherry = ghost_fruit_sprite_sheet.parse_sprite("cherry.png")
 
     events.invoke(events.LEVEL_UPDATE)
 
@@ -155,8 +157,7 @@ if __name__ == '__main__':
                         elif tile == Tile.POWER_PELLET:
                             pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
                         elif tile == Tile.FRUIT:
-                            pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/2.25))
-
+                            screen.blit(cherry,(TILE_PIXEL_SIZE * x, TILE_PIXEL_SIZE * y))
                 # Draw pacman
                 screen.blit(pacman_image_data[pacman.cur_dir][motion_index], (TILE_PIXEL_SIZE*pacman.x, TILE_PIXEL_SIZE*pacman.y))
 
