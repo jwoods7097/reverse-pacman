@@ -91,6 +91,9 @@ class Entity:
     def turn(self, direction):
         self.next_dir = direction
 
+    def reverse_direction(self):
+        self.turn(Direction.opposite(self.cur_dir))
+
     def get_velocity(self):
         if self.cur_dir == Direction.RIGHT:
             return (self.speed, 0)

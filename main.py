@@ -135,23 +135,28 @@ if __name__ == '__main__':
                         pacman.turn(Direction.RIGHT)
 
             # Set ghost mode
+            def set_ghost_mode(mode):
+                Ghost.mode = mode
+                for ghost in ghosts.values():
+                    ghost.reverse_direction()
+
             time_elapsed = tick_counter / FPS
             if time_elapsed <= 7:
-                Ghost.mode = Mode.SCATTER
+                set_ghost_mode(Mode.SCATTER)
             elif time_elapsed <= 27:
-                Ghost.mode = Mode.CHASE
+                set_ghost_mode(Mode.CHASE)
             elif time_elapsed <= 34:
-                Ghost.mode = Mode.SCATTER
+                set_ghost_mode(Mode.SCATTER)
             elif time_elapsed <= 54:
-                Ghost.mode = Mode.CHASE
+                set_ghost_mode(Mode.CHASE)
             elif time_elapsed <= 59:
-                Ghost.mode = Mode.SCATTER
+                set_ghost_mode(Mode.SCATTER)
             elif time_elapsed <= 79:
-                Ghost.mode = Mode.CHASE
+                set_ghost_mode(Mode.CHASE)
             elif time_elapsed <= 84:
-                Ghost.mode = Mode.SCATTER
+                set_ghost_mode(Mode.SCATTER)
             else:
-                Ghost.mode = Mode.CHASE
+                set_ghost_mode(Mode.CHASE)
             
             # if we release a ghost, then we have to know what ghost to release next
             # the first one we will always release is pinky, then inky, then clyde
