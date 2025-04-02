@@ -1,14 +1,13 @@
 import pygame
-
 from globals import *
 from level import Level, Tile
 from entity import Direction
 from pacman import Pacman
 from ghost import Ghost, Mode, Blinky, Clyde, Inky, Pinky
 import utils
-import events
 import math
 import time
+
 def detect_collision(circle_A, circle_B):
     """
     Return boolean if colliding
@@ -85,8 +84,6 @@ if __name__ == '__main__':
     next_ghost_out = pinky
     ghosts = { "blinky": blinky, "inky": inky, "clyde": clyde, "pinky": pinky }
 
-    events.invoke(events.LEVEL_UPDATE)
-
     # Game loop
     while running:      
         queue = pygame.event.get()
@@ -109,75 +106,45 @@ if __name__ == '__main__':
                         pacman.turn(Direction.DOWN)
                     if event.key == pygame.K_d:
                         pacman.turn(Direction.RIGHT)
-
-            # Set ghost mode
-            def set_ghost_mode(mode):
+            
+        # Set ghost movement directions
+        blinky.set_dir(game, pacman.x, pacman.y)
+        inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir)
+        clyde.set_dir(game, pacman.x, pacman.y)
+        pinky.set_dir(game, pacman.x, pacman.y, pacman.cur_dir)
+        
+        # Set ghost mode
+        def set_ghost_mode(mode):
+            if Ghost.mode != mode:
                 Ghost.mode = mode
                 for ghost in ghosts.values():
                     ghost.reverse_direction()
 
-            time_elapsed = tick_counter / FPS
-            if time_elapsed <= 7:
-                set_ghost_mode(Mode.SCATTER)
-            elif time_elapsed <= 27:
-                set_ghost_mode(Mode.CHASE)
-            elif time_elapsed <= 34:
-                set_ghost_mode(Mode.SCATTER)
-            elif time_elapsed <= 54:
-                set_ghost_mode(Mode.CHASE)
-            elif time_elapsed <= 59:
-                set_ghost_mode(Mode.SCATTER)
-            elif time_elapsed <= 79:
-                set_ghost_mode(Mode.CHASE)
-            elif time_elapsed <= 84:
-                set_ghost_mode(Mode.SCATTER)
-            else:
-                set_ghost_mode(Mode.CHASE)
-            
-            # if we release a ghost, then we have to know what ghost to release next
-            # the first one we will always release is pinky, then inky, then clyde
-            if next_ghost_out.prison and release_ghost_from_prison(next_ghost_out):
-                if pinky.prison: next_ghost_out = pinky
-                elif inky.prison: next_ghost_out = inky
-                elif clyde.prison: next_ghost_out = clyde
-
-            # Set ghost movement directions
-            blinky.set_dir(game, pacman.x, pacman.y)
-            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir)
-            clyde.set_dir(game, pacman.x, pacman.y)
-            pinky.set_dir(game, pacman.x, pacman.y, pacman.cur_dir)
-            
-            if event.type == events.LEVEL_UPDATE:
-                screen.fill("black")
-
-                # Draw level
-                for y, row in enumerate(game.board):
-                    for x, tile in enumerate(row):
-                        if tile == Tile.WALL:
-                            pygame.draw.rect(screen, "blue", utils.square(x,y,TILE_PIXEL_SIZE))
-                        elif tile == Tile.PELLET:
-                            pygame.draw.circle(screen, "white", *utils.circle(x,y,TILE_PIXEL_SIZE/5))
-                        elif tile == Tile.POWER_PELLET:
-                            pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
-                        elif tile == Tile.FRUIT:
-                            pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/10))
-
-                # Draw pacman and ghosts
-                pygame.draw.circle(screen, pacman.color, *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
-                pygame.draw.circle(screen, blinky.color, *utils.circle(blinky.x, blinky.y, TILE_PIXEL_SIZE / 2))
-                pygame.draw.circle(screen, inky.color, *utils.circle(inky.x, inky.y, TILE_PIXEL_SIZE / 2))
-                pygame.draw.circle(screen, clyde.color, *utils.circle(clyde.x, clyde.y, TILE_PIXEL_SIZE / 2))
-                pygame.draw.circle(screen, pinky.color, *utils.circle(pinky.x, pinky.y, TILE_PIXEL_SIZE / 2))
-                
-                # Draw text
-                score_text = font.render(f'Score: {pacman.score}', True, 'white')
-                screen.blit(score_text, score_text.get_rect())
-
-                # Draw life counter
-                lives_text = font.render("Lives : " + str(pacman.lives), True, pacman.color)
-                screen.blit(lives_text,(10*TILE_PIXEL_SIZE,0))                
-                pygame.display.update()
-
+        time_elapsed = tick_counter / FPS
+        if time_elapsed <= 7:
+            set_ghost_mode(Mode.SCATTER)
+        elif time_elapsed <= 27:
+            set_ghost_mode(Mode.CHASE)
+        elif time_elapsed <= 34:
+            set_ghost_mode(Mode.SCATTER)
+        elif time_elapsed <= 54:
+            set_ghost_mode(Mode.CHASE)
+        elif time_elapsed <= 59:
+            set_ghost_mode(Mode.SCATTER)
+        elif time_elapsed <= 79:
+            set_ghost_mode(Mode.CHASE)
+        elif time_elapsed <= 84:
+            set_ghost_mode(Mode.SCATTER)
+        else:
+            set_ghost_mode(Mode.CHASE)
+        
+        # if we release a ghost, then we have to know what ghost to release next
+        # the first one we will always release is pinky, then inky, then clyde
+        if next_ghost_out.prison and release_ghost_from_prison(next_ghost_out):
+            if pinky.prison: next_ghost_out = pinky
+            elif inky.prison: next_ghost_out = inky
+            elif clyde.prison: next_ghost_out = clyde
+        
         # Move pacman
         if pacman.can_move(game):
             pacman.move()
@@ -215,9 +182,37 @@ if __name__ == '__main__':
                     screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
                     time.sleep(10)
                     running = False
+        
+        # Draw level
+        screen.fill("black")
+        for y, row in enumerate(game.board):
+            for x, tile in enumerate(row):
+                if tile == Tile.WALL:
+                    pygame.draw.rect(screen, "blue", utils.square(x,y,TILE_PIXEL_SIZE))
+                elif tile == Tile.PELLET:
+                    pygame.draw.circle(screen, "white", *utils.circle(x,y,TILE_PIXEL_SIZE/5))
+                elif tile == Tile.POWER_PELLET:
+                    pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
+                elif tile == Tile.FRUIT:
+                    pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/10))
 
+        # Draw pacman and ghosts
+        pygame.draw.circle(screen, pacman.color, *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
+        pygame.draw.circle(screen, blinky.color, *utils.circle(blinky.x, blinky.y, TILE_PIXEL_SIZE / 2))
+        pygame.draw.circle(screen, inky.color, *utils.circle(inky.x, inky.y, TILE_PIXEL_SIZE / 2))
+        pygame.draw.circle(screen, clyde.color, *utils.circle(clyde.x, clyde.y, TILE_PIXEL_SIZE / 2))
+        pygame.draw.circle(screen, pinky.color, *utils.circle(pinky.x, pinky.y, TILE_PIXEL_SIZE / 2))
         
+        # Draw text
+        score_text = font.render(f'Score: {pacman.score}', True, 'white')
+        screen.blit(score_text, score_text.get_rect())
+
+        # Draw life counter
+        lives_text = font.render("Lives : " + str(pacman.lives), True, pacman.color)
+        screen.blit(lives_text,(10*TILE_PIXEL_SIZE,0))                
+        pygame.display.update()      
         
+        # Tick game
         tick_counter += 1
         clock.tick(FPS)
 

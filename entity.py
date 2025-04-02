@@ -2,7 +2,6 @@ from enum import Enum
 
 from level import Tile
 from globals import LEVEL_HEIGHT, LEVEL_WIDTH
-import events
 
 
 class Direction(Enum):
@@ -85,8 +84,6 @@ class Entity:
             self._y += self.speed
             if self.y >= LEVEL_HEIGHT:
                 self.y = 0
-
-        events.invoke(events.LEVEL_UPDATE)
 
     def turn(self, direction):
         self.next_dir = direction
