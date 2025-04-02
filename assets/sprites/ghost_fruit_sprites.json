@@ -79,82 +79,82 @@
       "x": 112,"y": 15,"w": 15,"h": 15
     }
   },
-  "pinky_01.png": {
+  "clyde_01.png": {
     "frame": {
       "x": 0,"y": 30,"w": 15,"h": 15
     }
   },
-  "pinky_02.png": {
+  "clyde_02.png": {
     "frame": {
       "x": 16,"y": 30,"w": 15,"h": 15
     }
   },
-  "pinky_31.png": {
+  "clyde_31.png": {
     "frame": {
       "x": 32,"y": 30,"w": 15,"h": 15
     }
   },
-  "pinky_32.png": {
+  "clyde_32.png": {
     "frame": {
       "x": 48,"y": 30,"w": 15,"h": 15
     }
   },
-  "pinky_11.png": {
+  "clyde_11.png": {
     "frame": {
       "x": 64,"y": 30,"w": 15,"h": 15
     }
   },
-  "pinky_12.png": {
+  "clyde_12.png": {
     "frame": {
       "x": 80,"y": 30,"w": 15,"h": 15
     }
   },
-  "pinky_21.png": {
+  "clyde_21.png": {
     "frame": {
       "x": 96,"y": 30,"w": 15,"h": 15
     }
   },
-  "pinky_22.png": {
+  "clyde_22.png": {
     "frame": {
       "x": 112,"y": 30,"w": 15,"h": 15
     }
   },
-  "clyde_01.png": {
+  "pinky_01.png": {
     "frame": {
       "x": 0,"y": 45,"w": 15,"h": 15
     }
   },
-  "clyde_02.png": {
+  "pinky_02.png": {
     "frame": {
       "x": 16,"y": 45,"w": 15,"h": 15
     }
   },
-  "clyde_31.png": {
+  "pinky_31.png": {
     "frame": {
       "x": 32,"y": 45,"w": 15,"h": 15
     }
   },
-  "clyde_32.png": {
+  "pinky_32.png": {
     "frame": {
       "x": 48,"y": 45,"w": 15,"h": 15
     }
   },
-  "clyde_11.png": {
+  "pinky_11.png": {
     "frame": {
       "x": 64,"y": 45,"w": 15,"h": 15
     }
   },
-  "clyde_12.png": {
+  "pinky_12.png": {
     "frame": {
       "x": 80,"y": 45,"w": 15,"h": 15
     }
   },
-  "clyde_21.png": {
+  "pinky_21.png": {
     "frame": {
       "x": 96,"y": 45,"w": 15,"h": 15
     }
   },
-  "clyde_22.png": {
+  "pinky_22.png": {
     "frame": {
       "x": 112,"y": 45,"w": 15,"h": 15
     }
