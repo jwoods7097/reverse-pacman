@@ -7,6 +7,6 @@ START_BTN_Y = 5
 START_BTN_W = 10
 START_BTN_H = 5
 TILE_PIXEL_SIZE = 15
-FPS = 2
+FPS = 5
 GHOST_LEAVE_POS = (13, 14)
 tick_counter = 0

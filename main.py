@@ -92,7 +92,7 @@ def release_ghost_from_prison(next_ghost):
 if __name__ == '__main__':
     # pygame setup
     pygame.init()
-    screen = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE))
+    screen = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE), pygame.SCALED | pygame.FULLSCREEN)
     pygame.display.set_caption("Reverse Pacman")
     clock = pygame.time.Clock()
     font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)    
@@ -135,23 +135,25 @@ if __name__ == '__main__':
     motion_index = 0
     ghost_motion_index = 0
     index_direction = 0
+    
     while running:
+        if state == GameState.MENU:
+            screen.fill("black")
+            # pygame.draw.rect(screen, "blue", utils.rect(START_BTN_X,START_BTN_Y,START_BTN_W,START_BTN_H))
+            title_text = title_font.render(f'PRESS ANY BUTTON TO START', True, 'white')
+            screen.blit(title_text, title_text.get_rect())
+            pygame.display.update()
+            queue = pygame.event.get()
+            for event in queue:
+                if event.type == pygame.KEYDOWN:
+                    state = GameState.INGAME
+            continue
+
         queue = pygame.event.get()
         for event in queue:
             # Quit game if "X" in window is clicked
             if event.type == pygame.QUIT:
                 running = False
-
-            if state == GameState.MENU:
-                screen.fill("black")
-                # pygame.draw.rect(screen, "blue", utils.rect(START_BTN_X,START_BTN_Y,START_BTN_W,START_BTN_H))
-                title_text = title_font.render(f'PRESS ANY BUTTON TO START', True, 'white')
-                screen.blit(title_text, title_text.get_rect())
-                pygame.display.update()
-                if event.type == pygame.KEYDOWN:
-                    state = GameState.INGAME
-                continue
-
 
             if event.type == pygame.KEYDOWN:
                 # Quit game if "q" is pressed
