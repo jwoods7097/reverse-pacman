@@ -51,6 +51,30 @@ def on_fright_collide_handler(ghosts):
     pass
 
 def animate_death_pacman():
+    # Draw death screen
+    screen.fill("black")
+    # Draw text
+    score_text = font.render(f'Score: {pacman.score}', True, 'white')
+    screen.blit(score_text, score_text.get_rect())
+
+    # Draw life counter
+    lives_text = font.render("Lives : " + str(pacman.lives), True, pacman.color)
+    screen.blit(lives_text,(10*TILE_PIXEL_SIZE,0))                
+    pygame.display.update()
+
+    # Draw level
+    for y, row in enumerate(game.board):
+        for x, tile in enumerate(row):
+            if tile == Tile.WALL:
+                pygame.draw.rect(screen, "blue", utils.square(x,y,TILE_PIXEL_SIZE))
+            elif tile == Tile.PELLET:
+                pygame.draw.circle(screen, "white", *utils.circle(x,y,TILE_PIXEL_SIZE/5))
+            elif tile == Tile.POWER_PELLET:
+                pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
+            elif tile == Tile.FRUIT:
+                pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/10))
+    
+    
     pass # Tim this is for you
 
 def release_ghost_from_prison(next_ghost):
@@ -175,13 +199,26 @@ if __name__ == '__main__':
             elif collide:
                 on_collide_handler(ghosts)
                 next_ghost_out = pinky
-                animate_death_pacman()
                 pacman.lives -= 1
+                animate_death_pacman()
+                
                 if pacman.lives == 0:
+                    # ACTUAL GAME OVER --- MASSIVE NEGATIVE REWARD
                     game_over_text = font.render("---GAME OVER---", True, "red")
+                    game_over_rect = game_over_text.get_rect()
                     screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
+                    pygame.display.update()
                     time.sleep(10)
                     running = False
+                else:
+                    # Lost Life, goes to reset --- MINOR NEGATIVE REWARD
+                    time_elapsed = 0
+                    # reset time so phases change
+                    game_over_text = font.render("---  Ready?  ---", True, "red")
+                    game_over_rect = game_over_text.get_rect()
+                    screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
+                    pygame.display.update()
+                    time.sleep(7)
         
         # Draw level
         screen.fill("black")
