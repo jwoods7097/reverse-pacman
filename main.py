@@ -1,4 +1,5 @@
 import pygame
+from spritesheet import Spritesheet
 from globals import *
 from level import Level, Tile
 from entity import Direction
@@ -108,8 +109,27 @@ if __name__ == '__main__':
     next_ghost_out = pinky
     ghosts = { "blinky": blinky, "inky": inky, "clyde": clyde, "pinky": pinky }
 
+    sprite_sheet = Spritesheet("assets/sprites/pacman_sprites.png")
+    ghost_fruit_sprite_sheet = Spritesheet("assets/sprites/ghost_fruit_sprites.png")
+    base_state = sprite_sheet.parse_sprite("pacman_s.png")
+    pacman_image_data = {d: [base_state] for d in Direction}
+    ghost_image_data = {ghost: {d: [] for d in Direction} for ghost in ghosts}
+
+    for i in range(2):
+        for d in Direction:
+            pacman_image_data[d].append(sprite_sheet.parse_sprite(f"pacman_{d.value}{i+1}.png"))
+
+        for name in ghosts:
+            for d in Direction:
+                ghost_image_data[name][d].append(ghost_fruit_sprite_sheet.parse_sprite(f"{name}_{d.value}{i + 1}.png"))
+
+    cherry = ghost_fruit_sprite_sheet.parse_sprite("cherry.png")
+
     # Game loop
-    while running:      
+    motion_index = 0
+    ghost_motion_index = 0
+    index_direction = 0
+    while running:
         queue = pygame.event.get()
         for event in queue:
             # Quit game if "X" in window is clicked
@@ -194,7 +214,7 @@ if __name__ == '__main__':
             ghost = ghosts[key]
             collide = detect_collision(pacman, ghost)
 
-            if collide and ghost.get_fright(): 
+            if collide and ghost.get_fright():
                 on_fright_collide_handler(ghosts)
             elif collide:
                 on_collide_handler(ghosts)
@@ -231,14 +251,29 @@ if __name__ == '__main__':
                 elif tile == Tile.POWER_PELLET:
                     pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
                 elif tile == Tile.FRUIT:
-                    pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/10))
+                    screen.blit(cherry,(TILE_PIXEL_SIZE * x, TILE_PIXEL_SIZE * y))
 
-        # Draw pacman and ghosts
-        pygame.draw.circle(screen, pacman.color, *utils.circle(pacman.x, pacman.y, TILE_PIXEL_SIZE/2))
-        pygame.draw.circle(screen, blinky.color, *utils.circle(blinky.x, blinky.y, TILE_PIXEL_SIZE / 2))
-        pygame.draw.circle(screen, inky.color, *utils.circle(inky.x, inky.y, TILE_PIXEL_SIZE / 2))
-        pygame.draw.circle(screen, clyde.color, *utils.circle(clyde.x, clyde.y, TILE_PIXEL_SIZE / 2))
-        pygame.draw.circle(screen, pinky.color, *utils.circle(pinky.x, pinky.y, TILE_PIXEL_SIZE / 2))
+        # Draw pacman
+        screen.blit(pacman_image_data[pacman.cur_dir][motion_index], (TILE_PIXEL_SIZE*pacman.x, TILE_PIXEL_SIZE*pacman.y))
+
+        # Draw ghosts
+        screen.blit(ghost_image_data['blinky'][blinky.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*blinky.x, TILE_PIXEL_SIZE*blinky.y))
+        screen.blit(ghost_image_data['inky'][inky.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*inky.x, TILE_PIXEL_SIZE*inky.y))
+        screen.blit(ghost_image_data['pinky'][pinky.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*pinky.x, TILE_PIXEL_SIZE*pinky.y))
+        screen.blit(ghost_image_data['clyde'][clyde.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*clyde.x, TILE_PIXEL_SIZE*clyde.y))
+
+        if (index_direction == 0):
+            motion_index += 1
+            if (motion_index == 3):
+                motion_index = 1
+                index_direction = 1
+        else:
+            motion_index -= 1
+            if (motion_index == -1):
+                motion_index = 1
+                index_direction = 0
+
+        ghost_motion_index = (ghost_motion_index + 1) % 2
         
         # Draw text
         score_text = font.render(f'Score: {pacman.score}', True, 'white')
@@ -246,7 +281,8 @@ if __name__ == '__main__':
 
         # Draw life counter
         lives_text = font.render("Lives : " + str(pacman.lives), True, pacman.color)
-        screen.blit(lives_text,(10*TILE_PIXEL_SIZE,0))                
+        screen.blit(lives_text,(10*TILE_PIXEL_SIZE,0))              
+        
         pygame.display.update()      
         
         # Tick game
