@@ -11,6 +11,7 @@ class Pacman(Entity):
         self.color = "yellow"
         self._dotsEaten = 0
         self.lives = 3
+        self.ghost_multiplier = 1
 
     @property
     def energized(self):
@@ -30,8 +31,6 @@ class Pacman(Entity):
             return 10
         elif tile_type == Tile.POWER_PELLET:
             self.score += 50
-            self.timer = globals.tick_counter
-            globals.energized = True
             return 50
         elif tile_type == Tile.FRUIT:
             self.score += 100

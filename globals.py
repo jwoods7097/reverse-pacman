@@ -1,7 +1,6 @@
 LEVEL_WIDTH = 28
 LEVEL_HEIGHT = 36
 TILE_PIXEL_SIZE = 15
-FPS = 2
+FPS = 5
 GHOST_LEAVE_POS = (13, 14)
-tick_counter = 0
-energized = False
+PACMAN_LEAVE_POS = (13, 26)

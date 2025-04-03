@@ -9,20 +9,12 @@ import utils
 import math
 import time
 
-def detect_collision(circle_A, circle_B):
-    """
-    Return boolean if colliding
+def detect_collision(pacman, ghost):
+    return pacman.x == ghost.x and pacman.y == ghost.y
 
-    If euclidian distance from two circles is shorter than their radii combined
-    then they must be colliding.
-    """
-    dx = (circle_A.x - circle_B.x)*TILE_PIXEL_SIZE
-    dy = (circle_A.y - circle_B.y)*TILE_PIXEL_SIZE
-    distance = math.sqrt(dx * dx + dy * dy)
-    universal_radius = TILE_PIXEL_SIZE/2
-
-    colliding = distance < (2 * universal_radius)
-    return colliding
+def place_ghost(ghost):
+    (ghost.x, ghost.y) = (14, 16)
+    ghost.prison = True
 
 def place_ghosts(ghosts):
     # outside and on top
@@ -48,8 +40,11 @@ def on_collide_handler(ghosts):
     for ghost in ghosts_list:
         ghost.pellet_count = 0
 
-def on_fright_collide_handler(ghosts):
-    pass
+def on_fright_collide_handler(pacman, ghost):
+    place_ghost(ghost)
+    ghost.fright = False
+    pacman.score += pacman.ghost_multiplier * 200
+    pacman.ghost_multiplier *= 2
 
 def animate_death_pacman():
     # Draw death screen
@@ -73,19 +68,14 @@ def animate_death_pacman():
             elif tile == Tile.POWER_PELLET:
                 pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
             elif tile == Tile.FRUIT:
-                pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/10))
+                screen.blit(cherry,(TILE_PIXEL_SIZE * x, TILE_PIXEL_SIZE * y))
     
     
     pass # Tim this is for you
 
 def release_ghost_from_prison(next_ghost):
-    if next_ghost.pellet_count >= next_ghost.pellet_max:
-        (next_ghost.x, next_ghost.y) = GHOST_LEAVE_POS
-        next_ghost.prison = False
-        next_ghost.next_dir = Direction.DOWN
-        return True
-    else:
-        return False
+    (next_ghost.x, next_ghost.y) = GHOST_LEAVE_POS
+    next_ghost.prison = False
 
 if __name__ == '__main__':
     # pygame setup
@@ -100,20 +90,21 @@ if __name__ == '__main__':
     game = Level('assets/levels/level1.txt')
 
     # Load game objects
-    pacman = Pacman(13, 26)
+    pacman = Pacman(*PACMAN_LEAVE_POS)
 
     blinky = Blinky(13, 14)
     clyde = Clyde(13,16)
     inky = Inky(14,16)
     pinky = Pinky(15,16)
-    next_ghost_out = pinky
     ghosts = { "blinky": blinky, "inky": inky, "clyde": clyde, "pinky": pinky }
 
+    # Parse sprites
     sprite_sheet = Spritesheet("assets/sprites/pacman_sprites.png")
     ghost_fruit_sprite_sheet = Spritesheet("assets/sprites/ghost_fruit_sprites.png")
     base_state = sprite_sheet.parse_sprite("pacman_s.png")
     pacman_image_data = {d: [base_state] for d in Direction}
     ghost_image_data = {ghost: {d: [] for d in Direction} for ghost in ghosts}
+    ghost_fright_image_data = [[], []]
 
     for i in range(2):
         for d in Direction:
@@ -122,6 +113,9 @@ if __name__ == '__main__':
         for name in ghosts:
             for d in Direction:
                 ghost_image_data[name][d].append(ghost_fruit_sprite_sheet.parse_sprite(f"{name}_{d.value}{i + 1}.png"))
+        
+        for j in range(2):
+            ghost_fright_image_data[i].append(ghost_fruit_sprite_sheet.parse_sprite(f"fright_{i}{j + 1}.png"))
 
     cherry = ghost_fruit_sprite_sheet.parse_sprite("cherry.png")
 
@@ -129,6 +123,8 @@ if __name__ == '__main__':
     motion_index = 0
     ghost_motion_index = 0
     index_direction = 0
+    fright_end = 0
+    tick_counter = 0
     while running:
         queue = pygame.event.get()
         for event in queue:
@@ -181,24 +177,67 @@ if __name__ == '__main__':
             set_ghost_mode(Mode.SCATTER)
         else:
             set_ghost_mode(Mode.CHASE)
+
+        if fright_end <= time_elapsed:
+            for ghost in ghosts.values():
+                ghost.fright = False
+            pacman.ghost_multiplier = 1
         
         # if we release a ghost, then we have to know what ghost to release next
         # the first one we will always release is pinky, then inky, then clyde
-        if next_ghost_out.prison and release_ghost_from_prison(next_ghost_out):
-            if pinky.prison: next_ghost_out = pinky
-            elif inky.prison: next_ghost_out = inky
-            elif clyde.prison: next_ghost_out = clyde
+        for ghost in ghosts.values():
+            if ghost.prison and Ghost.pellet_count >= ghost.pellet_max:
+                release_ghost_from_prison(ghost)
         
         # Move pacman
         if pacman.can_move(game):
             pacman.move()
             score_added = pacman.eat(game[pacman.y, pacman.x])
-            if score_added > 0:
-                next_ghost_out.pellet_count_up()
+            if game[pacman.y, pacman.x] == Tile.POWER_PELLET or game[pacman.y, pacman.x] == Tile.PELLET:
+                Ghost.pellet_count += 1
+            if game[pacman.y, pacman.x] == Tile.POWER_PELLET:
+                for ghost in ghosts.values():
+                    ghost.fright = True
+                fright_end = time_elapsed + 6
             game[pacman.y, pacman.x] = Tile.EMPTY
             if (pacman._dotsEaten == 70 or pacman._dotsEaten == 170):
                 game.board[20, 13] = Tile.FRUIT
 
+        # Detect collisions
+        def check_collision():
+            for ghost in ghosts.values():
+                collide = detect_collision(pacman, ghost)
+
+                if collide and ghost.fright:
+                    on_fright_collide_handler(pacman, ghost)
+                elif collide:
+                    on_collide_handler(ghosts)
+                    pacman.lives -= 1
+                    animate_death_pacman()
+
+                    if pacman.lives == 0:
+                        # ACTUAL GAME OVER --- MASSIVE NEGATIVE REWARD
+                        game_over_text = font.render("---GAME OVER---", True, "red")
+                        game_over_rect = game_over_text.get_rect()
+                        screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
+                        pygame.display.update()
+                        time.sleep(10)
+                        global running
+                        running = False
+                    else:
+                        # Lost Life, goes to reset --- MINOR NEGATIVE REWARD
+                        global time_elapsed
+                        time_elapsed = 0
+                        Ghost.pellet_count = 0
+                        # reset time so phases change
+                        game_over_text = font.render("---  Ready?  ---", True, "red")
+                        game_over_rect = game_over_text.get_rect()
+                        screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
+                        (pacman.x, pacman.y) = PACMAN_LEAVE_POS
+                        pygame.display.update()
+                        time.sleep(5)
+        check_collision()
+        
         # Move ghosts
         if blinky.can_move(game):
             blinky.move()
@@ -210,35 +249,7 @@ if __name__ == '__main__':
             pinky.move()
 
         # Detect collisions
-        for key in ghosts.keys():
-            ghost = ghosts[key]
-            collide = detect_collision(pacman, ghost)
-
-            if collide and ghost.get_fright():
-                on_fright_collide_handler(ghosts)
-            elif collide:
-                on_collide_handler(ghosts)
-                next_ghost_out = pinky
-                pacman.lives -= 1
-                animate_death_pacman()
-                
-                if pacman.lives == 0:
-                    # ACTUAL GAME OVER --- MASSIVE NEGATIVE REWARD
-                    game_over_text = font.render("---GAME OVER---", True, "red")
-                    game_over_rect = game_over_text.get_rect()
-                    screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
-                    pygame.display.update()
-                    time.sleep(10)
-                    running = False
-                else:
-                    # Lost Life, goes to reset --- MINOR NEGATIVE REWARD
-                    time_elapsed = 0
-                    # reset time so phases change
-                    game_over_text = font.render("---  Ready?  ---", True, "red")
-                    game_over_rect = game_over_text.get_rect()
-                    screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
-                    pygame.display.update()
-                    time.sleep(7)
+        check_collision()
         
         # Draw level
         screen.fill("black")
@@ -257,10 +268,15 @@ if __name__ == '__main__':
         screen.blit(pacman_image_data[pacman.cur_dir][motion_index], (TILE_PIXEL_SIZE*pacman.x, TILE_PIXEL_SIZE*pacman.y))
 
         # Draw ghosts
-        screen.blit(ghost_image_data['blinky'][blinky.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*blinky.x, TILE_PIXEL_SIZE*blinky.y))
-        screen.blit(ghost_image_data['inky'][inky.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*inky.x, TILE_PIXEL_SIZE*inky.y))
-        screen.blit(ghost_image_data['pinky'][pinky.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*pinky.x, TILE_PIXEL_SIZE*pinky.y))
-        screen.blit(ghost_image_data['clyde'][clyde.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*clyde.x, TILE_PIXEL_SIZE*clyde.y))
+        for name in ghosts:
+            ghost = ghosts[name]
+            if ghost.fright:
+                if fright_end - time_elapsed > 1:
+                    screen.blit(ghost_fright_image_data[0][ghost_motion_index], (TILE_PIXEL_SIZE*ghost.x, TILE_PIXEL_SIZE*ghost.y))
+                else:
+                    screen.blit(ghost_fright_image_data[ghost_motion_index][ghost_motion_index], (TILE_PIXEL_SIZE*ghost.x, TILE_PIXEL_SIZE*ghost.y))
+            else:
+                screen.blit(ghost_image_data[name][ghost.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*ghost.x, TILE_PIXEL_SIZE*ghost.y))
 
         if (index_direction == 0):
             motion_index += 1

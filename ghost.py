@@ -17,40 +17,16 @@ class Mode(Enum):
 # Base Ghost class, do not instantiate
 class Ghost(Entity):
     mode = Mode.SCATTER
-    fright = False
+    pellet_count = 0
 
     def __init__(self, start_x, start_y, init_color):
         super().__init__(start_x, start_y)
         self.scatter_target = (0, 0)
         self.init_color = init_color
         self.color = self.init_color
-        self.temp_timer = None
-        self.pellet_count = 0
         self.pellet_max = 0
         self.prison = True
-
-    def update_color(self):
-        if self.mode == Mode.FRIGHTENED:
-            if self.temp_timer == -1:
-                self.temp_timer = globals.tick_counter
-                print("set")
-                print(globals.tick_counter)
-                print(self.temp_timer)
-            if (globals.tick_counter - self.temp_timer) > 7 and (self.temp_timer - globals.tick_counter) % 2 == 1:
-                self.color = "white"
-            else:
-                self.color = "blue"
-
-            #print(globals.tick_counter - self.temp_timer)
-            if globals.tick_counter - self.temp_timer >= 13:
-                print("theory only gets you so far")
-                self.mode = Mode.CHASE
-                globals.energized = False
-        else:
-            self.color = self.init_color
-            self.temp_timer = -1
-
-
+        self.fright = False
 
     # Gets the direction that would put the ghost closest to the point (x, y)
     def set_closest_dir(self, level, x, y):
@@ -80,17 +56,6 @@ class Ghost(Entity):
 
         self.turn(random.choice(directions))
 
-    def get_fright(self):
-        if self.mode == Mode.FRIGHTENED:
-            self.fright = True
-        return self.fright
-    
-    def get_pellet_count(self):
-        return self.pellet_count
-    
-    def pellet_count_up(self):
-        self.pellet_count += 1
-
 
 # Red Ghost
 class Blinky(Ghost):
@@ -119,7 +84,9 @@ class Inky(Ghost):
         self.pellet_max = 30
 
     def set_dir(self, level, pacman_x, pacman_y, blinky_x, blinky_y, pacman_dir):
-        if Ghost.mode == Mode.CHASE:
+        if self.fright:
+            self.turn_random_dir(level)
+        elif Ghost.mode == Mode.CHASE:
             # Draws a vector from pacman + offset for every direciton to blinky and doubles it.
             if pacman_dir == Direction.UP:
                 target_x = blinky_x + 2 * ((pacman_x - 2) - blinky_x)
@@ -149,7 +116,9 @@ class Clyde(Ghost):
         self.pellet_max = 60
 
     def set_dir(self, level, pacman_x, pacman_y):
-        if Ghost.mode == Mode.CHASE:
+        if self.fright:
+            self.turn_random_dir(level)
+        elif Ghost.mode == Mode.CHASE:
             if math.dist((pacman_x, pacman_y), (self.x, self.y)) >= 8:
                 self.set_closest_dir(level, pacman_x, pacman_y)
             else:
@@ -169,7 +138,9 @@ class Pinky(Ghost):
         self.pellet_max = 5
 
     def set_dir(self, level, pacman_x, pacman_y, pacman_dir):
-        if Ghost.mode == Mode.CHASE:
+        if self.fright:
+            self.turn_random_dir(level)
+        elif Ghost.mode == Mode.CHASE:
             if pacman_dir == Direction.UP:
                 target_x = pacman_x - 4
                 target_y = pacman_y - 4
