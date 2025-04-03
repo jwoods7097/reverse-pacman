@@ -80,7 +80,7 @@ def release_ghost_from_prison(next_ghost):
 if __name__ == '__main__':
     # pygame setup
     pygame.init()
-    screen = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE))
+    screen = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE), pygame.FULLSCREEN | pygame.SCALED)
     pygame.display.set_caption("Reverse Pacman")
     clock = pygame.time.Clock()
     font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)
