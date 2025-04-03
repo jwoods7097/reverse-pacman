@@ -193,9 +193,9 @@ if __name__ == '__main__':
         if pacman.can_move(game):
             pacman.move()
             score_added = pacman.eat(game[pacman.y, pacman.x])
-            if game[pacman.y, pacman.x] == Tile.POWER_PELLET or game[pacman.y, pacman.x] == Tile.PELLET:
+            if game[pacman.y, pacman.x] == Tile.PELLET:
                 Ghost.pellet_count += 1
-            if game[pacman.y, pacman.x] == Tile.POWER_PELLET:
+            elif game[pacman.y, pacman.x] == Tile.POWER_PELLET:
                 for ghost in ghosts.values():
                     ghost.fright = True
                 fright_end = time_elapsed + 6
@@ -230,7 +230,7 @@ if __name__ == '__main__':
                         time_elapsed = 0
                         Ghost.pellet_count = 0
                         # reset time so phases change
-                        game_over_text = font.render("---  Ready?  ---", True, "red")
+                        game_over_text = font.render("---Ready?---", True, "red")
                         game_over_rect = game_over_text.get_rect()
                         screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
                         (pacman.x, pacman.y) = PACMAN_LEAVE_POS
@@ -297,7 +297,15 @@ if __name__ == '__main__':
 
         # Draw life counter
         lives_text = font.render("Lives : " + str(pacman.lives), True, pacman.color)
-        screen.blit(lives_text,(10*TILE_PIXEL_SIZE,0))              
+        screen.blit(lives_text,(10*TILE_PIXEL_SIZE,0))  
+
+        if pacman._dotsEaten == 240:
+            game_over_text = font.render("---YOU WIN---", True, "green")
+            game_over_rect = game_over_text.get_rect()
+            screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
+            pygame.display.update()
+            time.sleep(10)
+            running = False        
         
         pygame.display.update()      
         
