@@ -2,21 +2,17 @@ from enum import Enum
 
 from level import Tile
 from globals import LEVEL_HEIGHT, LEVEL_WIDTH
-import events
 
 
 class Direction(Enum):
-    NONE = 0
-    RIGHT = 1
-    UP = 2
-    LEFT = 3
-    DOWN = 4
+    RIGHT = 0
+    UP = 1
+    LEFT = 2
+    DOWN = 3
 
     @classmethod
     def opposite(self, direction):
-        if direction == Direction.NONE:
-            return Direction.NONE
-        return Direction(((direction.value - 1 + 2) % 4) + 1)
+        return Direction((direction.value + 2) % 4)
 
 
 class Entity:
@@ -25,8 +21,8 @@ class Entity:
         self._x = start_x
         self._y = start_y
         self.speed = 1.0
-        self.cur_dir = Direction.NONE
-        self.next_dir = Direction.NONE
+        self.cur_dir = Direction.LEFT
+        self.next_dir = Direction.LEFT
         self.color = "white"
 
     @property
@@ -52,8 +48,6 @@ class Entity:
     @color.setter
     def color(self, value):
         self._color = value
-
-
 
     def check_direction(self, level, direction):
         if direction == Direction.UP:
@@ -91,10 +85,11 @@ class Entity:
             if self.y >= LEVEL_HEIGHT:
                 self.y = 0
 
-        events.invoke(events.LEVEL_UPDATE)
-
     def turn(self, direction):
         self.next_dir = direction
+
+    def reverse_direction(self):
+        self.turn(Direction.opposite(self.cur_dir))
 
     def get_velocity(self):
         if self.cur_dir == Direction.RIGHT:
