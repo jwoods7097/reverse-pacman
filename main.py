@@ -84,6 +84,8 @@ if __name__ == '__main__':
     pygame.display.set_caption("Reverse Pacman")
     clock = pygame.time.Clock()
     font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)
+    if pygame.joystick.get_count() == 1:
+        joystick1 = pygame.joystick.Joystick(0)
     running = True
 
     # Load level
@@ -146,6 +148,16 @@ if __name__ == '__main__':
                         pacman.turn(Direction.DOWN)
                     if event.key == pygame.K_d:
                         pacman.turn(Direction.RIGHT)
+
+            if event.type == pygame.JOYAXISMOTION:
+                if joystick1.get_axis(0) and joystick1.get_axis(0) < -0.2:
+                    pacman.turn(Direction.LEFT)
+                if joystick1.get_axis(0) and joystick1.get_axis(0) > 0.2:
+                    pacman.turn(Direction.RIGHT)
+                if joystick1.get_axis(1) and joystick1.get_axis(1) < -0.2:
+                    pacman.turn(Direction.UP)
+                if joystick1.get_axis(1) and joystick1.get_axis(1) > 0.2:
+                    pacman.turn(Direction.DOWN)
             
         # Set ghost movement directions
         blinky.set_dir(game, pacman.x, pacman.y)
@@ -229,6 +241,8 @@ if __name__ == '__main__':
                         global time_elapsed
                         time_elapsed = 0
                         Ghost.pellet_count = 0
+                        for ghost in ghosts.values():
+                            ghost.fright = False
                         # reset time so phases change
                         game_over_text = font.render("---Ready?---", True, "red")
                         game_over_rect = game_over_text.get_rect()
