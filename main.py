@@ -135,8 +135,8 @@ if __name__ == '__main__':
                 running = False
 
             if event.type == pygame.KEYDOWN:
-                # Quit game if "q" is pressed
-                if event.key == pygame.K_q:
+                # Quit game if escape key is pressed
+                if event.key == pygame.K_ESCAPE:
                     running = False
                 else:
                     # Set pacman movement direction
