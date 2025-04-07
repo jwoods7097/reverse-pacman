@@ -1,17 +1,17 @@
 from entity import Entity
 from level import Tile
-import globals
+from globals import *
 
 class Pacman(Entity):
     
     def __init__(self, start_x, start_y):
         super().__init__(start_x, start_y)
         self.score = 0
+        self._energized = False
         self.timer = 0
         self.color = "yellow"
         self._dotsEaten = 0
         self.lives = 3
-        self.ghost_multiplier = 1
 
     @property
     def energized(self):
@@ -31,6 +31,8 @@ class Pacman(Entity):
             return 10
         elif tile_type == Tile.POWER_PELLET:
             self.score += 50
+            self.timer = tick_counter
+            self.energized = True
             return 50
         elif tile_type == Tile.FRUIT:
             self.score += 100

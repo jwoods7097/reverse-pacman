@@ -9,12 +9,20 @@ import utils
 import math
 import time
 
-def detect_collision(pacman, ghost):
-    return pacman.x == ghost.x and pacman.y == ghost.y
+def detect_collision(circle_A, circle_B):
+    """
+    Return boolean if colliding
 
-def place_ghost(ghost):
-    (ghost.x, ghost.y) = (14, 16)
-    ghost.prison = True
+    If euclidian distance from two circles is shorter than their radii combined
+    then they must be colliding.
+    """
+    dx = (circle_A.x - circle_B.x)*TILE_PIXEL_SIZE
+    dy = (circle_A.y - circle_B.y)*TILE_PIXEL_SIZE
+    distance = math.sqrt(dx * dx + dy * dy)
+    universal_radius = TILE_PIXEL_SIZE/2
+
+    colliding = distance < (2 * universal_radius)
+    return colliding
 
 def place_ghosts(ghosts):
     # outside and on top
@@ -40,11 +48,8 @@ def on_collide_handler(ghosts):
     for ghost in ghosts_list:
         ghost.pellet_count = 0
 
-def on_fright_collide_handler(pacman, ghost):
-    place_ghost(ghost)
-    ghost.fright = False
-    pacman.score += pacman.ghost_multiplier * 200
-    pacman.ghost_multiplier *= 2
+def on_fright_collide_handler(ghosts):
+    pass
 
 def animate_death_pacman():
     # Draw death screen
@@ -68,45 +73,63 @@ def animate_death_pacman():
             elif tile == Tile.POWER_PELLET:
                 pygame.draw.circle(screen, "white", *utils.circle(x,y,2*TILE_PIXEL_SIZE/5))
             elif tile == Tile.FRUIT:
-                screen.blit(cherry,(TILE_PIXEL_SIZE * x, TILE_PIXEL_SIZE * y))
+                pygame.draw.circle(screen, "red", *utils.circle(x,y,2*TILE_PIXEL_SIZE/10))
     
     
     pass # Tim this is for you
 
 def release_ghost_from_prison(next_ghost):
-    (next_ghost.x, next_ghost.y) = GHOST_LEAVE_POS
-    next_ghost.prison = False
+    if next_ghost.pellet_count >= next_ghost.pellet_max:
+        (next_ghost.x, next_ghost.y) = GHOST_LEAVE_POS
+        next_ghost.prison = False
+        next_ghost.next_dir = Direction.DOWN
+        return True
+    else:
+        return False
+
+def redraw_screen(board):
+    screen.fill("black")
+    for y, row in enumerate(board):
+        for x, tile in enumerate(row):
+            if tile == Tile.WALL:
+                pygame.draw.rect(screen, "blue", utils.square(x, y, TILE_PIXEL_SIZE))
+            elif tile == Tile.PELLET:
+                pygame.draw.circle(screen, "white", *utils.circle(x, y, TILE_PIXEL_SIZE / 5))
+            elif tile == Tile.POWER_PELLET:
+                pygame.draw.circle(screen, "white", *utils.circle(x, y, 2 * TILE_PIXEL_SIZE / 5))
+            elif tile == Tile.FRUIT:
+                screen.blit(cherry, (TILE_PIXEL_SIZE * x, TILE_PIXEL_SIZE * y))
+
+def lerp(a, b, t):
+    return (1-t) * a + b * t
 
 if __name__ == '__main__':
     # pygame setup
     pygame.init()
-    screen = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE), pygame.FULLSCREEN | pygame.SCALED)
+    screen = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE))
     pygame.display.set_caption("Reverse Pacman")
     clock = pygame.time.Clock()
     font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)
-    if pygame.joystick.get_count() == 1:
-        joystick1 = pygame.joystick.Joystick(0)
     running = True
 
     # Load level
     game = Level('assets/levels/level1.txt')
 
     # Load game objects
-    pacman = Pacman(*PACMAN_LEAVE_POS)
+    pacman = Pacman(13, 26)
 
     blinky = Blinky(13, 14)
     clyde = Clyde(13,16)
     inky = Inky(14,16)
     pinky = Pinky(15,16)
+    next_ghost_out = pinky
     ghosts = { "blinky": blinky, "inky": inky, "clyde": clyde, "pinky": pinky }
 
-    # Parse sprites
     sprite_sheet = Spritesheet("assets/sprites/pacman_sprites.png")
     ghost_fruit_sprite_sheet = Spritesheet("assets/sprites/ghost_fruit_sprites.png")
     base_state = sprite_sheet.parse_sprite("pacman_s.png")
     pacman_image_data = {d: [base_state] for d in Direction}
     ghost_image_data = {ghost: {d: [] for d in Direction} for ghost in ghosts}
-    ghost_fright_image_data = [[], []]
 
     for i in range(2):
         for d in Direction:
@@ -115,9 +138,6 @@ if __name__ == '__main__':
         for name in ghosts:
             for d in Direction:
                 ghost_image_data[name][d].append(ghost_fruit_sprite_sheet.parse_sprite(f"{name}_{d.value}{i + 1}.png"))
-        
-        for j in range(2):
-            ghost_fright_image_data[i].append(ghost_fruit_sprite_sheet.parse_sprite(f"fright_{i}{j + 1}.png"))
 
     cherry = ghost_fruit_sprite_sheet.parse_sprite("cherry.png")
 
@@ -125,8 +145,8 @@ if __name__ == '__main__':
     motion_index = 0
     ghost_motion_index = 0
     index_direction = 0
-    fright_end = 0
-    tick_counter = 0
+    transition_frame_count = 10
+    position_data = {'pacman': [], 'blinky': [], 'inky': [], 'pinky': [], 'clyde': []}
     while running:
         queue = pygame.event.get()
         for event in queue:
@@ -135,8 +155,8 @@ if __name__ == '__main__':
                 running = False
 
             if event.type == pygame.KEYDOWN:
-                # Quit game if escape key is pressed
-                if event.key == pygame.K_ESCAPE:
+                # Quit game if "q" is pressed
+                if event.key == pygame.K_q:
                     running = False
                 else:
                     # Set pacman movement direction
@@ -148,16 +168,6 @@ if __name__ == '__main__':
                         pacman.turn(Direction.DOWN)
                     if event.key == pygame.K_d:
                         pacman.turn(Direction.RIGHT)
-
-            if event.type == pygame.JOYAXISMOTION:
-                if joystick1.get_axis(0) and joystick1.get_axis(0) < -0.2:
-                    pacman.turn(Direction.LEFT)
-                if joystick1.get_axis(0) and joystick1.get_axis(0) > 0.2:
-                    pacman.turn(Direction.RIGHT)
-                if joystick1.get_axis(1) and joystick1.get_axis(1) < -0.2:
-                    pacman.turn(Direction.UP)
-                if joystick1.get_axis(1) and joystick1.get_axis(1) > 0.2:
-                    pacman.turn(Direction.DOWN)
             
         # Set ghost movement directions
         blinky.set_dir(game, pacman.x, pacman.y)
@@ -189,81 +199,90 @@ if __name__ == '__main__':
             set_ghost_mode(Mode.SCATTER)
         else:
             set_ghost_mode(Mode.CHASE)
-
-        if fright_end <= time_elapsed:
-            for ghost in ghosts.values():
-                ghost.fright = False
-            pacman.ghost_multiplier = 1
         
         # if we release a ghost, then we have to know what ghost to release next
         # the first one we will always release is pinky, then inky, then clyde
-        for ghost in ghosts.values():
-            if ghost.prison and Ghost.pellet_count >= ghost.pellet_max:
-                release_ghost_from_prison(ghost)
+        if next_ghost_out.prison and release_ghost_from_prison(next_ghost_out):
+            if pinky.prison: next_ghost_out = pinky
+            elif inky.prison: next_ghost_out = inky
+            elif clyde.prison: next_ghost_out = clyde
         
         # Move pacman
         if pacman.can_move(game):
+            old_x = pacman.x
+            old_y = pacman.y
             pacman.move()
+            position_data['pacman'] = [(old_x, old_y)] + [(lerp(old_x, pacman.x, t/transition_frame_count), lerp(old_y, pacman.y, t/transition_frame_count))
+                                       for t in range(1, transition_frame_count + 1)]
             score_added = pacman.eat(game[pacman.y, pacman.x])
-            if game[pacman.y, pacman.x] == Tile.PELLET:
-                Ghost.pellet_count += 1
-            elif game[pacman.y, pacman.x] == Tile.POWER_PELLET:
-                for ghost in ghosts.values():
-                    ghost.fright = True
-                fright_end = time_elapsed + 6
+            if score_added > 0:
+                next_ghost_out.pellet_count_up()
             game[pacman.y, pacman.x] = Tile.EMPTY
             if (pacman._dotsEaten == 70 or pacman._dotsEaten == 170):
                 game.board[20, 13] = Tile.FRUIT
+        else:
+            position_data['pacman'] = [(pacman.x, pacman.y)]*transition_frame_count
 
-        # Detect collisions
-        def check_collision():
-            for ghost in ghosts.values():
-                collide = detect_collision(pacman, ghost)
-
-                if collide and ghost.fright:
-                    on_fright_collide_handler(pacman, ghost)
-                elif collide:
-                    on_collide_handler(ghosts)
-                    pacman.lives -= 1
-                    animate_death_pacman()
-
-                    if pacman.lives == 0:
-                        # ACTUAL GAME OVER --- MASSIVE NEGATIVE REWARD
-                        game_over_text = font.render("---GAME OVER---", True, "red")
-                        game_over_rect = game_over_text.get_rect()
-                        screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
-                        pygame.display.update()
-                        time.sleep(10)
-                        global running
-                        running = False
-                    else:
-                        # Lost Life, goes to reset --- MINOR NEGATIVE REWARD
-                        global time_elapsed
-                        time_elapsed = 0
-                        Ghost.pellet_count = 0
-                        for ghost in ghosts.values():
-                            ghost.fright = False
-                        # reset time so phases change
-                        game_over_text = font.render("---Ready?---", True, "red")
-                        game_over_rect = game_over_text.get_rect()
-                        screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
-                        (pacman.x, pacman.y) = PACMAN_LEAVE_POS
-                        pygame.display.update()
-                        time.sleep(5)
-        check_collision()
-        
         # Move ghosts
         if blinky.can_move(game):
+            old_x = blinky.x
+            old_y = blinky.y
             blinky.move()
+            position_data['blinky'] = [
+                (lerp(old_x, blinky.x, t / transition_frame_count), lerp(old_y, blinky.y, t / transition_frame_count))
+                for t in range(1, transition_frame_count + 1)]
         if inky.can_move(game):
+            old_x = inky.x
+            old_y = inky.y
             inky.move()
+            position_data['inky'] = [
+                (lerp(old_x, inky.x, t / transition_frame_count), lerp(old_y, inky.y, t / transition_frame_count))
+                for t in range(1, transition_frame_count + 1)]
         if clyde.can_move(game):
+            old_x = clyde.x
+            old_y = clyde.y
             clyde.move()
+            position_data['clyde'] = [
+                (lerp(old_x, clyde.x, t / transition_frame_count), lerp(old_y, clyde.y, t / transition_frame_count))
+                for t in range(1, transition_frame_count + 1)]
         if pinky.can_move(game):
+            old_x = pinky.x
+            old_y = pinky.y
             pinky.move()
+            position_data['pinky'] = [
+                (lerp(old_x, pinky.x, t / transition_frame_count), lerp(old_y, pinky.y, t / transition_frame_count))
+                for t in range(1, transition_frame_count + 1)]
 
         # Detect collisions
-        check_collision()
+        for key in ghosts.keys():
+            ghost = ghosts[key]
+            collide = detect_collision(pacman, ghost)
+
+            if collide and ghost.get_fright():
+                on_fright_collide_handler(ghosts)
+            elif collide:
+                on_collide_handler(ghosts)
+                next_ghost_out = pinky
+                pacman.lives -= 1
+                animate_death_pacman()
+                
+                if pacman.lives == 0:
+                    # ACTUAL GAME OVER --- MASSIVE NEGATIVE REWARD
+                    game_over_text = font.render("---GAME OVER---", True, "red")
+                    game_over_rect = game_over_text.get_rect()
+                    screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
+                    pygame.display.update()
+                    time.sleep(10)
+                    running = False
+                else:
+                    # Lost Life, goes to reset --- MINOR NEGATIVE REWARD
+                    time_elapsed = 0
+                    # reset time so phases change
+                    game_over_text = font.render("---  Ready?  ---", True, "red")
+                    game_over_rect = game_over_text.get_rect()
+                    screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
+                    pygame.display.update()
+                    time.sleep(7)
         
         # Draw level
         screen.fill("black")
@@ -278,19 +297,72 @@ if __name__ == '__main__':
                 elif tile == Tile.FRUIT:
                     screen.blit(cherry,(TILE_PIXEL_SIZE * x, TILE_PIXEL_SIZE * y))
 
+        for t in range(0, transition_frame_count):
+            redraw_screen(game.board)
+            # Draw text
+            score_text = font.render(f'Score: {pacman.score}', True, 'white')
+            screen.blit(score_text, score_text.get_rect())
+
+            # Draw life counter
+            lives_text = font.render("Lives : " + str(pacman.lives), True, pacman.color)
+            screen.blit(lives_text, (10 * TILE_PIXEL_SIZE, 0))
+
+            # Draw pacman
+            screen.blit(pacman_image_data[pacman.cur_dir][motion_index], (round(TILE_PIXEL_SIZE*position_data['pacman'][t][0]),
+                                                                          round(TILE_PIXEL_SIZE*position_data['pacman'][t][1])))
+
+            # Draw ghosts
+            screen.blit(ghost_image_data['blinky'][blinky.cur_dir][ghost_motion_index],
+                        (round(TILE_PIXEL_SIZE * position_data['blinky'][t][0]), round(TILE_PIXEL_SIZE * position_data['blinky'][t][1])))
+            screen.blit(ghost_image_data['inky'][inky.cur_dir][ghost_motion_index],
+                        (round(TILE_PIXEL_SIZE * position_data['inky'][t][0]), round(TILE_PIXEL_SIZE * position_data['inky'][t][1])))
+            screen.blit(ghost_image_data['pinky'][pinky.cur_dir][ghost_motion_index],
+                        (round(TILE_PIXEL_SIZE * position_data['pinky'][t][0]), round(TILE_PIXEL_SIZE * position_data['pinky'][t][1])))
+            screen.blit(ghost_image_data['clyde'][clyde.cur_dir][ghost_motion_index],
+                        (round(TILE_PIXEL_SIZE * position_data['clyde'][t][0]), round(TILE_PIXEL_SIZE * position_data['clyde'][t][1])))
+
+            if (index_direction == 0):
+                motion_index += 1
+                if (motion_index == 3):
+                    motion_index = 1
+                    index_direction = 1
+            else:
+                motion_index -= 1
+                if (motion_index == -1):
+                    motion_index = 1
+                    index_direction = 0
+
+            ghost_motion_index = (ghost_motion_index + 1) % 2
+            pygame.display.update()
+            #clock.tick(FPS)
+
+        redraw_screen(game.board)
+        # Draw text
+        score_text = font.render(f'Score: {pacman.score}', True, 'white')
+        screen.blit(score_text, score_text.get_rect())
+
+        # Draw life counter
+        lives_text = font.render("Lives : " + str(pacman.lives), True, pacman.color)
+        screen.blit(lives_text, (10 * TILE_PIXEL_SIZE, 0))
+
         # Draw pacman
-        screen.blit(pacman_image_data[pacman.cur_dir][motion_index], (TILE_PIXEL_SIZE*pacman.x, TILE_PIXEL_SIZE*pacman.y))
+        screen.blit(pacman_image_data[pacman.cur_dir][motion_index],
+                    (round(TILE_PIXEL_SIZE * position_data['pacman'][t][0]),
+                     round(TILE_PIXEL_SIZE * position_data['pacman'][t][1])))
 
         # Draw ghosts
-        for name in ghosts:
-            ghost = ghosts[name]
-            if ghost.fright:
-                if fright_end - time_elapsed > 1:
-                    screen.blit(ghost_fright_image_data[0][ghost_motion_index], (TILE_PIXEL_SIZE*ghost.x, TILE_PIXEL_SIZE*ghost.y))
-                else:
-                    screen.blit(ghost_fright_image_data[ghost_motion_index][ghost_motion_index], (TILE_PIXEL_SIZE*ghost.x, TILE_PIXEL_SIZE*ghost.y))
-            else:
-                screen.blit(ghost_image_data[name][ghost.cur_dir][ghost_motion_index], (TILE_PIXEL_SIZE*ghost.x, TILE_PIXEL_SIZE*ghost.y))
+        screen.blit(ghost_image_data['blinky'][blinky.cur_dir][ghost_motion_index],
+                    (round(TILE_PIXEL_SIZE * position_data['blinky'][t][0]),
+                     round(TILE_PIXEL_SIZE * position_data['blinky'][t][1])))
+        screen.blit(ghost_image_data['inky'][inky.cur_dir][ghost_motion_index],
+                    (round(TILE_PIXEL_SIZE * position_data['inky'][t][0]),
+                     round(TILE_PIXEL_SIZE * position_data['inky'][t][1])))
+        screen.blit(ghost_image_data['pinky'][pinky.cur_dir][ghost_motion_index],
+                    (round(TILE_PIXEL_SIZE * position_data['pinky'][t][0]),
+                     round(TILE_PIXEL_SIZE * position_data['pinky'][t][1])))
+        screen.blit(ghost_image_data['clyde'][clyde.cur_dir][ghost_motion_index],
+                    (round(TILE_PIXEL_SIZE * position_data['clyde'][t][0]),
+                     round(TILE_PIXEL_SIZE * position_data['clyde'][t][1])))
 
         if (index_direction == 0):
             motion_index += 1
@@ -304,27 +376,11 @@ if __name__ == '__main__':
                 index_direction = 0
 
         ghost_motion_index = (ghost_motion_index + 1) % 2
-        
-        # Draw text
-        score_text = font.render(f'Score: {pacman.score}', True, 'white')
-        screen.blit(score_text, score_text.get_rect())
+        pygame.display.update()
 
-        # Draw life counter
-        lives_text = font.render("Lives : " + str(pacman.lives), True, pacman.color)
-        screen.blit(lives_text,(10*TILE_PIXEL_SIZE,0))  
-
-        if pacman._dotsEaten == 240:
-            game_over_text = font.render("---YOU WIN---", True, "green")
-            game_over_rect = game_over_text.get_rect()
-            screen.blit(game_over_text,(10*TILE_PIXEL_SIZE,2*TILE_PIXEL_SIZE))
-            pygame.display.update()
-            time.sleep(10)
-            running = False        
-        
-        pygame.display.update()      
         
         # Tick game
         tick_counter += 1
-        clock.tick(FPS)
+        clock.tick(4)
 
     exit()
