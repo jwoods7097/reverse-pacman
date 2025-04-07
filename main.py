@@ -6,7 +6,6 @@ from entity import Direction
 from pacman import Pacman
 from ghost import Ghost, Mode, Blinky, Clyde, Inky, Pinky
 import utils
-import math
 import time
 
 
@@ -100,6 +99,11 @@ def redraw_screen(board):
 
 def lerp(a, b, t):
     return (1-t) * a + b * t
+
+def add_position_data(dictionary, name, old_x, old_y, x, y, transition_frame_count):
+    dictionary[name] = [(old_x, old_y)] + [
+        (lerp(old_x, x, t / transition_frame_count), lerp(old_y, y, t / transition_frame_count))
+        for t in range(1, transition_frame_count + 1)]
 
 
 if __name__ == '__main__':
@@ -236,9 +240,15 @@ if __name__ == '__main__':
             old_x = pacman.x
             old_y = pacman.y
             pacman.move()
-            position_data['pacman'] = [(old_x, old_y)] + [
-                (lerp(old_x, pacman.x, t / transition_frame_count), lerp(old_y, pacman.y, t / transition_frame_count))
-                for t in range(1, transition_frame_count + 1)]
+
+            if (old_x == LEVEL_WIDTH - 1 and pacman.x == 0):
+                add_position_data(position_data, 'pacman', old_x, old_y, LEVEL_WIDTH, pacman.y, transition_frame_count)
+                position_data['pacman'][-1] = (pacman.x, pacman.y)
+            elif (old_x == 0 and pacman.x == LEVEL_WIDTH - 1):
+                add_position_data(position_data, 'pacman', old_x, old_y, -1, pacman.y, transition_frame_count)
+                position_data['pacman'][-1] = (pacman.x, pacman.y)
+            else:
+                add_position_data(position_data, 'pacman', old_x, old_y, pacman.x, pacman.y, transition_frame_count)
             score_added = pacman.eat(game[pacman.y, pacman.x])
             if game[pacman.y, pacman.x] == Tile.PELLET:
                 Ghost.pellet_count += 1
@@ -292,35 +302,20 @@ if __name__ == '__main__':
 
         check_collision()
 
-        # Move ghosts
-        if blinky.can_move(game):
-            old_x = blinky.x
-            old_y = blinky.y
-            blinky.move()
-            position_data['blinky'] = [
-                (lerp(old_x, blinky.x, t / transition_frame_count), lerp(old_y, blinky.y, t / transition_frame_count))
-                for t in range(1, transition_frame_count + 1)]
-        if inky.can_move(game):
-            old_x = inky.x
-            old_y = inky.y
-            inky.move()
-            position_data['inky'] = [
-                (lerp(old_x, inky.x, t / transition_frame_count), lerp(old_y, inky.y, t / transition_frame_count))
-                for t in range(1, transition_frame_count + 1)]
-        if clyde.can_move(game):
-            old_x = clyde.x
-            old_y = clyde.y
-            clyde.move()
-            position_data['clyde'] = [
-                (lerp(old_x, clyde.x, t / transition_frame_count), lerp(old_y, clyde.y, t / transition_frame_count))
-                for t in range(1, transition_frame_count + 1)]
-        if pinky.can_move(game):
-            old_x = pinky.x
-            old_y = pinky.y
-            pinky.move()
-            position_data['pinky'] = [
-                (lerp(old_x, pinky.x, t / transition_frame_count), lerp(old_y, pinky.y, t / transition_frame_count))
-                for t in range(1, transition_frame_count + 1)]
+        #Move ghosts
+        for name, ghost in ghosts.items():
+            if ghost.can_move(game):
+                old_x = ghost.x
+                old_y = ghost.y
+                ghost.move()
+                if (old_x == LEVEL_WIDTH - 1 and ghost.x == 0):
+                    add_position_data(position_data, name, old_x, old_y, LEVEL_WIDTH, ghost.y, transition_frame_count)
+                    position_data[name][-1] = (ghost.x, ghost.y)
+                elif (old_x == 0 and ghost.x == LEVEL_WIDTH - 1):
+                    add_position_data(position_data, name, old_x, old_y, -1, ghost.y, transition_frame_count)
+                    position_data[name][-1] = (ghost.x, ghost.y)
+                else:
+                    add_position_data(position_data, name, old_x, old_y, ghost.x, ghost.y, transition_frame_count)
 
         # Detect collisions
         check_collision()
