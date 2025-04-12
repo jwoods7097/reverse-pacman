@@ -7,6 +7,8 @@ from pacman import Pacman
 from ghost import Ghost, Mode, Blinky, Clyde, Inky, Pinky
 import utils
 import time
+from stable_baselines3 import PPO
+import numpy as np
 
 
 def detect_collision(pacman, ghost):
@@ -261,6 +263,9 @@ if __name__ == '__main__':
     inky_player = joystick_assignments.get("inky")
     pinky_player = joystick_assignments.get("pinky")
     clyde_player = joystick_assignments.get("clyde")
+    
+    # Load model
+    model = PPO.load('trained_models/pacman_5m.zip')
 
     # Game loop
     motion_index = 0
@@ -273,6 +278,27 @@ if __name__ == '__main__':
     while running:
         queue = pygame.event.get()
         for event in queue:
+            
+            # Get pacman direction from model
+            level_obs = np.zeros((LEVEL_HEIGHT, LEVEL_WIDTH, len(Tile)), dtype=bool)
+            for y, row in enumerate(game.board):
+                for x, tile in enumerate(row):
+                    level_obs[y, x, tile.value] = True
+
+            state = {
+                # for entities, we are storing (x, y, v_x, v_y)
+                "pacman": [pacman.x, pacman.y, *pacman.get_velocity()],
+                "blinky": [ghosts["blinky"].x, ghosts["blinky"].y, *ghosts["blinky"].get_velocity()],
+                "inky":   [ghosts["inky"].x, ghosts["inky"].y, *ghosts["inky"].get_velocity()],
+                "pinky":  [ghosts["pinky"].x, ghosts["pinky"].y, *ghosts["pinky"].get_velocity()],
+                "clyde":  [ghosts["clyde"].x, ghosts["clyde"].y, *ghosts["clyde"].get_velocity()],
+                "level":  level_obs
+            }
+            
+            action, _ = model.predict(state, deterministic=True)
+            pacman_dir = Direction(action)
+            pacman.turn(pacman_dir)
+            
             # Quit game if "X" in window is clicked
             if event.type == pygame.QUIT:
                 running = False
