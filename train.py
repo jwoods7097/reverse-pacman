@@ -7,12 +7,9 @@ from environment import PacmanEnv
 #from stable_baselines3.common.env_checker import check_env
 #from stable_baselines3.common.policies import MlPPolicy
 from stable_baselines3.common.vec_env import DummyVecEnv
-from stable_baselines3 import DQN
+from stable_baselines3 import PPO
 
-"""if __name__ == "__main__":
-    #ALGO PARAMS
-    
-    ###ENV SETUP
+if __name__ == "__main__":
     # Create a new Reverse Pacman Environment
     env = PacmanEnv()
     
@@ -21,22 +18,20 @@ from stable_baselines3 import DQN
     if not os.path.exists('logs'):
         os.makedirs('logs')
 
-    ###AGENT SETUP
-    model = DQN("MultiInputPolicy", env, verbose=1)
+    # AGENT SETUP
+    model = PPO("MultiInputPolicy", env, verbose=1, tensorboard_log='logs')
 
-    ###Training Logic
+    # Training Logic
     start_time = datetime.now()
     print(f'Training started on {start_time.ctime()}')
-    model.learn(total_timesteps=100)
+    model.learn(total_timesteps=100000)
     end_time = datetime.now()
     print(f'Training ended on {end_time.ctime()}')
-    print(f'Training lasted {end_time - start_time}')"""
-
-if __name__ == '__main__':
-    env = PacmanEnv(render_mode='human')
-    env.reset()
-
-    terminated = False
-    while not terminated:
-        observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
-        print(f'Step: {info['step']}\t\tReward: {reward}')
+    print(f'Training lasted {end_time - start_time}')
+    
+    # Save model
+    if not os.path.exists('trained_models'):
+        os.makedirs('trained_models')
+    model.save(f'trained_models/pacman.zip')
+    
+    env.close()

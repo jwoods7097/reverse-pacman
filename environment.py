@@ -27,12 +27,12 @@ class PacmanEnv(gym.Env):
         self.observation_space = spaces.Dict(
             {
                 # for entities, we are storing (x, y, v_x, v_y)
-                "pacman": spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_WIDTH, LEVEL_HEIGHT, 1, 1]), dtype=np.float32),
-                "blinky": spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_WIDTH, LEVEL_HEIGHT, 1, 1]), dtype=np.float32),
-                "inky":   spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_WIDTH, LEVEL_HEIGHT, 1, 1]), dtype=np.float32),
-                "pinky":  spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_WIDTH, LEVEL_HEIGHT, 1, 1]), dtype=np.float32),
-                "clyde":  spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_WIDTH, LEVEL_HEIGHT, 1, 1]), dtype=np.float32),
-                "level":  spaces.MultiBinary([LEVEL_WIDTH, LEVEL_HEIGHT, len(Tile)])
+                "pacman": spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_HEIGHT, LEVEL_WIDTH, 1, 1]), dtype=np.float32),
+                "blinky": spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_HEIGHT, LEVEL_WIDTH, 1, 1]), dtype=np.float32),
+                "inky":   spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_HEIGHT, LEVEL_WIDTH, 1, 1]), dtype=np.float32),
+                "pinky":  spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_HEIGHT, LEVEL_WIDTH, 1, 1]), dtype=np.float32),
+                "clyde":  spaces.Box(np.array([0, 0, -1, -1]), np.array([LEVEL_HEIGHT, LEVEL_WIDTH, 1, 1]), dtype=np.float32),
+                "level":  spaces.MultiBinary([LEVEL_HEIGHT, LEVEL_WIDTH, len(Tile)])
             }
         )
 
@@ -49,12 +49,10 @@ class PacmanEnv(gym.Env):
         self.render_mode = render_mode
 
     def _get_obs(self):  
-        level_obs = np.zeros_like(self.level.board, dtype=object)
+        level_obs = np.zeros((LEVEL_HEIGHT, LEVEL_WIDTH, len(Tile)), dtype=bool)
         for y, row in enumerate(self.level.board):
             for x, tile in enumerate(row):
-                arr = np.zeros(len(Tile), dtype=bool)
-                arr[tile.value] = True
-                level_obs[y, x] = arr
+                level_obs[y, x, tile.value] = True
 
         return {
                 # for entities, we are storing (x, y, v_x, v_y)
