@@ -16,15 +16,8 @@ from main import on_collide_handler, on_fright_collide_handler, animate_death_pa
 from pacman import Pacman
 from spritesheet import Spritesheet
 
-
-
-register(
-    id="PacMan-v0",
-    entry_point="game:PacmanEnv",
-)
-
 class PacmanEnv(gym.Env):
-    metadata = {"render_modes": ["human"], "render_fps": 4}
+    metadata = {"render_modes": ["human"], "render_fps": FPS}
 
     def __init__(self, render_mode=None):
         
@@ -43,37 +36,17 @@ class PacmanEnv(gym.Env):
             }
         )
 
-        # The 5 actions are: no-op, left, up, right, down
-        self.action_space = spaces.Discrete(5)
-
-        sprite_sheet = Spritesheet("assets/sprites/pacman_sprites.png")
-        ghost_fruit_sprite_sheet = Spritesheet("assets/sprites/ghost_fruit_sprites.png")
-        base_state = sprite_sheet.parse_sprite("pacman_s.png")
-        self.pacman_image_data = {d: [base_state] for d in Direction}
-        self.ghost_image_data = {ghost: {d: [] for d in Direction} for ghost in self.ghosts}
-        self.ghost_fright_image_data = [[], []]
-
-        for i in range(2):
-            for d in Direction:
-                self.pacman_image_data[d].append(sprite_sheet.parse_sprite(f"pacman_{d.value}{i+1}.png"))
-
-            for name in self.ghosts:
-                for d in Direction:
-                    self.ghost_image_data[name][d].append(ghost_fruit_sprite_sheet.parse_sprite(f"{name}_{d.value}{i + 1}.png"))
-            
-            for j in range(2):
-                self.ghost_fright_image_data[i].append(ghost_fruit_sprite_sheet.parse_sprite(f"fright_{i}{j + 1}.png"))
-
-        self.cherry = ghost_fruit_sprite_sheet.parse_sprite("cherry.png")
+        # The 4 actions are: left, up, right, down
+        self.action_space = spaces.Discrete(4)
+        
+        # Pygame objects
+        pygame.init()
+        self.window = None
+        self.clock = None
+        self.font = None
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
-
-        # Pygame objects
-        pygame.init()
-        self.window = pygame.display.set_mode((LEVEL_WIDTH*TILE_PIXEL_SIZE, LEVEL_HEIGHT*TILE_PIXEL_SIZE))
-        self.clock = pygame.time.Clock("Reverse Pacman")
-        self.font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)
 
     def _get_obs(self):  
         level_obs = np.zeros_like(self.level.board, dtype=object)
@@ -104,7 +77,7 @@ class PacmanEnv(gym.Env):
         super().reset(seed=seed)
 
         # Game objects
-        self.pacman = Pacman(13, 26)
+        self.pacman = Pacman(*PACMAN_LEAVE_POS)
 
         self.blinky = Blinky(13, 14)
         self.clyde = Clyde(13,16)
@@ -127,9 +100,6 @@ class PacmanEnv(gym.Env):
 
         observation = self._get_obs()
         info = self._get_info()
-
-        if self.render_mode == "human":
-            self._render_frame()
 
         return observation, info
 
@@ -210,7 +180,6 @@ class PacmanEnv(gym.Env):
                     on_collide_handler(self.ghosts)
                     self.pacman.lives -= 1
                     reward = -100000
-                    animate_death_pacman()
 
                     if self.pacman.lives == 0:
                         # ACTUAL GAME OVER --- MASSIVE NEGATIVE REWARD
@@ -266,19 +235,47 @@ class PacmanEnv(gym.Env):
         # Initialization of pygame objects
         if self.window is None and self.render_mode == "human":
             pygame.init()
-            self.window = pygame.display.set_mode((LEVEL_WIDTH * TILE_PIXEL_SIZE, LEVEL_HEIGHT * TILE_PIXEL_SIZE),
-                                     pygame.FULLSCREEN | pygame.SCALED)
+            self.window = pygame.display.set_mode((LEVEL_WIDTH * TILE_PIXEL_SIZE, LEVEL_HEIGHT * TILE_PIXEL_SIZE))
             pygame.display.set_caption("Reverse Pacman")
+            
+            sprite_sheet = Spritesheet("assets/sprites/pacman_sprites.png")
+            ghost_fruit_sprite_sheet = Spritesheet("assets/sprites/ghost_fruit_sprites.png")
+            base_state = sprite_sheet.parse_sprite("pacman_s.png")
+            self.pacman_image_data = {d: [base_state] for d in Direction}
+            self.ghost_image_data = {ghost: {d: [] for d in Direction} for ghost in self.ghosts}
+            self.ghost_fright_image_data = [[], []]
+
+            for i in range(2):
+                for d in Direction:
+                    self.pacman_image_data[d].append(sprite_sheet.parse_sprite(f"pacman_{d.value}{i+1}.png"))
+
+                for name in self.ghosts:
+                    for d in Direction:
+                        self.ghost_image_data[name][d].append(ghost_fruit_sprite_sheet.parse_sprite(f"{name}_{d.value}{i + 1}.png"))
+                
+                for j in range(2):
+                    self.ghost_fright_image_data[i].append(ghost_fruit_sprite_sheet.parse_sprite(f"fright_{i}{j + 1}.png"))
+
+            self.cherry = ghost_fruit_sprite_sheet.parse_sprite("cherry.png")
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
         if self.font is None and self.render_mode == "human":
             self.font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)
 
         # Draw level
-        redraw_screen(self.level.board)
-
         for t in range(0, self.transition_frame_count):
-            redraw_screen(self.level.board)
+            self.window.fill("black")
+            for y, row in enumerate(self.level.board):
+                for x, tile in enumerate(row):
+                    if tile == Tile.WALL:
+                        pygame.draw.rect(self.window, "blue", utils.square(x, y, TILE_PIXEL_SIZE))
+                    elif tile == Tile.PELLET:
+                        pygame.draw.circle(self.window, "white", *utils.circle(x, y, TILE_PIXEL_SIZE / 5))
+                    elif tile == Tile.POWER_PELLET:
+                        pygame.draw.circle(self.window, "white", *utils.circle(x, y, 2 * TILE_PIXEL_SIZE / 5))
+                    elif tile == Tile.FRUIT:
+                        self.window.blit(self.cherry, (TILE_PIXEL_SIZE * x, TILE_PIXEL_SIZE * y))
+            
             # Draw text
             score_text = self.font.render(f'Score: {self.pacman.score}', True, 'white')
             self.window.blit(score_text, score_text.get_rect())
