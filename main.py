@@ -20,8 +20,9 @@ def place_ghost(ghost):
 
 def place_ghosts(ghosts):
     # outside and on top
-    (ghosts["blinky"].x, ghosts["blinky"].y) = GHOST_LEAVE_POS
+    (ghosts["blinky"].x, ghosts["blinky"].y) = (13, 14)
     ghosts["blinky"].prison = False
+    blinky.set_dir(game, pacman.x, pacman.y)
     ghosts["inky"].pellet_count = 0
 
     (ghosts["inky"].x, ghosts["inky"].y) = (13, 16)
@@ -106,6 +107,105 @@ def add_position_data(dictionary, name, old_x, old_y, x, y, transition_frame_cou
         for t in range(1, transition_frame_count + 1)]
 
 
+# Define colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GHOST_COLORS = {
+    "blinky": (255, 0, 0),
+    "pinky": (255, 105, 180),
+    "inky": (0, 255, 255),
+    "clyde": (255, 165, 0)
+}
+
+# Ghost layout grid positions
+GHOST_POSITIONS = {
+    (0, 0): "blinky",
+    (1, 0): "pinky",
+    (0, 1): "inky",
+    (1, 1): "clyde"
+}
+
+def show_menu():
+    pygame.joystick.init()
+    joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count() - 1, -1, -1)]
+    for j in joysticks:
+        j.init()
+
+    selector_pos = [0, 0]
+    assigned_ghosts = {}  # ghost_name: "P1", "CPU", etc.
+    joystick_assignments = {}  # ghost_name: joystick id
+
+    total_players = min(4, len(joysticks))
+    current_player_index = 0  # 0 = Player 1, 1 = Player 2, etc.
+
+    finished_selection = False
+
+    running1 = True
+    while running1:
+        screen.fill(BLACK)
+
+        # Header text (e.g., Player 1 select)
+        if current_player_index < total_players:
+            label = font.render(f"Player {current_player_index + 1} select", True, WHITE)
+            screen.blit(label, (screen.get_width() // 2 - label.get_width() // 2, 30))
+        else:
+            label = font.render("Press ENTER to start!", True, WHITE)
+            screen.blit(label, (screen.get_width() // 2 - label.get_width() // 2, 30))
+
+        # Draw ghost boxes
+        for (gx, gy), name in GHOST_POSITIONS.items():
+            color = GHOST_COLORS[name]
+            rect = pygame.Rect(50 + gx * 200, 150 + gy * 150, 150, 100)
+            pygame.draw.rect(screen, color, rect)
+
+            # Ghost name centered
+            name_label = font.render(name, True, BLACK)
+            screen.blit(name_label, name_label.get_rect(center=rect.center))
+
+            # Corner text: P1, P2, etc or CPU
+            if name in assigned_ghosts:
+                tag = assigned_ghosts[name]
+            else:
+                tag = "CPU"
+            tag_label = font.render(tag, True, BLACK)
+            screen.blit(tag_label, (rect.x + 5, rect.y + 5))
+
+        # Draw selector box if still assigning
+        if current_player_index < total_players:
+            sel_rect = pygame.Rect(50 + selector_pos[0] * 200, 150 + selector_pos[1] * 150, 150, 100)
+            pygame.draw.rect(screen, WHITE, sel_rect, 3)
+
+        for event in pygame.event.get():
+
+            # Enter prints assignments
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+
+                    return assigned_ghosts
+
+            # Only allow selection if current player < total_players
+            if current_player_index < total_players:
+                joystick = joysticks[current_player_index]
+
+                # Movement
+                if event.type == pygame.JOYHATMOTION and event.joy == joystick.get_id():
+                    dx, dy = event.value
+                    selector_pos[0] = max(0, min(1, selector_pos[0] + dx))  # X: 0–1
+                    selector_pos[1] = max(0, min(1, selector_pos[1] - dy))  # Y: 0–1
+
+                # 'A' Button (button 0) to lock in ghost
+                if event.type == pygame.JOYBUTTONDOWN and event.joy == joystick.get_id():
+                    if event.button == 0:
+                        selected_ghost = GHOST_POSITIONS.get(tuple(selector_pos))
+                        if selected_ghost not in assigned_ghosts:
+                            assigned_ghosts[selected_ghost] = f"P{current_player_index + 1}"
+                            joystick_assignments[selected_ghost] = joystick.get_id()
+                            current_player_index += 1
+
+        pygame.display.flip()
+        clock.tick(60)
+
+
 if __name__ == '__main__':
     # pygame setup
     pygame.init()
@@ -114,9 +214,14 @@ if __name__ == '__main__':
     pygame.display.set_caption("Reverse Pacman")
     clock = pygame.time.Clock()
     font = pygame.font.Font('assets/fonts/emulogic.ttf', 10)
-    if pygame.joystick.get_count() == 1:
-        joystick1 = pygame.joystick.Joystick(0)
+
+    joystick1 = pygame.joystick.Joystick(3)
+    joystick2 = pygame.joystick.Joystick(2)
+    joystick3 = pygame.joystick.Joystick(1)
+    joystick4 = pygame.joystick.Joystick(0)
+
     running = True
+
 
     # Load level
     game = Level('assets/levels/level1.txt')
@@ -151,6 +256,13 @@ if __name__ == '__main__':
 
     cherry = ghost_fruit_sprite_sheet.parse_sprite("cherry.png")
 
+    assigned_ghosts = joysticks = joystick_assignments = show_menu()
+
+    blinky_player = joystick_assignments.get("blinky")
+    inky_player = joystick_assignments.get("inky")
+    pinky_player = joystick_assignments.get("pinky")
+    clyde_player = joystick_assignments.get("clyde")
+
     # Game loop
     motion_index = 0
     ghost_motion_index = 0
@@ -180,22 +292,70 @@ if __name__ == '__main__':
                         pacman.turn(Direction.DOWN)
                     if event.key == pygame.K_d:
                         pacman.turn(Direction.RIGHT)
-                    
+
+
             if event.type == pygame.JOYHATMOTION:
-                if joystick1.get_hat(0) == (-1, 0):
-                    pacman.turn(Direction.LEFT)
-                if joystick1.get_hat(0) == (1, 0):
-                    pacman.turn(Direction.RIGHT)
-                if joystick1.get_hat(0) == (0, 1):
-                    pacman.turn(Direction.UP)
-                if joystick1.get_hat(0) == (0, -1):
-                    pacman.turn(Direction.DOWN)
+                # Helper list to loop through joysticks and associated player labels
+                joystick_players = [
+                    (joystick1, "P1"),
+                    (joystick2, "P2"),
+                    (joystick3, "P3"),
+                    (joystick4, "P4"),
+                ]
+
+                for joystick, player_id in joystick_players:
+                    hat = joystick.get_hat(0)
+
+                    if hat == (-1, 0):  # Left
+                        if blinky_player == player_id:
+                            blinky.turn(Direction.LEFT)
+                        elif inky_player == player_id:
+                            inky.turn(Direction.LEFT)
+                        elif pinky_player == player_id:
+                            pinky.turn(Direction.LEFT)
+                        elif clyde_player == player_id:
+                            clyde.turn(Direction.LEFT)
+
+                    elif hat == (1, 0):  # Right
+                        if blinky_player == player_id:
+                            blinky.turn(Direction.RIGHT)
+                        elif inky_player == player_id:
+                            inky.turn(Direction.RIGHT)
+                        elif pinky_player == player_id:
+                            pinky.turn(Direction.RIGHT)
+                        elif clyde_player == player_id:
+                            clyde.turn(Direction.RIGHT)
+
+                    elif hat == (0, 1):  # Up
+                        if blinky_player == player_id:
+                            blinky.turn(Direction.UP)
+                        elif inky_player == player_id:
+                            inky.turn(Direction.UP)
+                        elif pinky_player == player_id:
+                            pinky.turn(Direction.UP)
+                        elif clyde_player == player_id:
+                            clyde.turn(Direction.UP)
+
+                    elif hat == (0, -1):  # Down
+                        if blinky_player == player_id:
+                            blinky.turn(Direction.DOWN)
+                        elif inky_player == player_id:
+                            inky.turn(Direction.DOWN)
+                        elif pinky_player == player_id:
+                            pinky.turn(Direction.DOWN)
+                        elif clyde_player == player_id:
+                            clyde.turn(Direction.DOWN)
+
 
         # Set ghost movement directions
-        blinky.set_dir(game, pacman.x, pacman.y)
-        inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir)
-        clyde.set_dir(game, pacman.x, pacman.y)
-        pinky.set_dir(game, pacman.x, pacman.y, pacman.cur_dir)
+        if blinky_player is None:
+            blinky.set_dir(game, pacman.x, pacman.y)
+        if inky_player is None:
+            inky.set_dir(game, pacman.x, pacman.y, blinky.x, blinky.y, pacman.cur_dir)
+        if clyde_player is None:
+            clyde.set_dir(game, pacman.x, pacman.y)
+        if pinky_player is None:
+            pinky.set_dir(game, pacman.x, pacman.y, pacman.cur_dir)
 
 
         # Set ghost mode
@@ -284,6 +444,7 @@ if __name__ == '__main__':
                         time.sleep(10)
                         global running
                         running = False
+
                     else:
                         # Lost Life, goes to reset --- MINOR NEGATIVE REWARD
                         global time_elapsed
@@ -304,9 +465,9 @@ if __name__ == '__main__':
 
         #Move ghosts
         for name, ghost in ghosts.items():
+            old_x = ghost.x
+            old_y = ghost.y
             if ghost.can_move(game):
-                old_x = ghost.x
-                old_y = ghost.y
                 ghost.move()
                 if (old_x == LEVEL_WIDTH - 1 and ghost.x == 0):
                     add_position_data(position_data, name, old_x, old_y, LEVEL_WIDTH, ghost.y, transition_frame_count)
@@ -314,8 +475,8 @@ if __name__ == '__main__':
                 elif (old_x == 0 and ghost.x == LEVEL_WIDTH - 1):
                     add_position_data(position_data, name, old_x, old_y, -1, ghost.y, transition_frame_count)
                     position_data[name][-1] = (ghost.x, ghost.y)
-                else:
-                    add_position_data(position_data, name, old_x, old_y, ghost.x, ghost.y, transition_frame_count)
+
+            add_position_data(position_data, name, old_x, old_y, ghost.x, ghost.y, transition_frame_count)
 
         # Detect collisions
         check_collision()
@@ -346,6 +507,7 @@ if __name__ == '__main__':
             # Draw ghosts
             for name in ghosts:
                 ghost = ghosts[name]
+
                 if ghost.fright:
                     if fright_end - time_elapsed > 1:
                         screen.blit(ghost_fright_image_data[0][ghost_motion_index],
@@ -396,5 +558,3 @@ if __name__ == '__main__':
         # Tick game
         tick_counter += 1
         clock.tick(FPS)
-
-    exit()
