@@ -22,7 +22,6 @@ def place_ghosts(ghosts):
     # outside and on top
     (ghosts["blinky"].x, ghosts["blinky"].y) = (13, 14)
     ghosts["blinky"].prison = False
-    blinky.set_dir(game, pacman.x, pacman.y)
     ghosts["inky"].pellet_count = 0
 
     (ghosts["inky"].x, ghosts["inky"].y) = (13, 16)
@@ -432,6 +431,7 @@ if __name__ == '__main__':
                     on_fright_collide_handler(pacman, ghost)
                 elif collide:
                     on_collide_handler(ghosts)
+                    blinky.set_dir(game, pacman.x, pacman.y)
                     pacman.lives -= 1
                     animate_death_pacman()
 

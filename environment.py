@@ -176,6 +176,7 @@ class PacmanEnv(gym.Env):
                     reward = self.pacman.ghost_multiplier * 200
                 elif collide:
                     on_collide_handler(self.ghosts)
+                    self.blinky.set_dir(self.level, self.pacman.x, self.pacman.y)
                     self.pacman.lives -= 1
                     reward = -100000
 

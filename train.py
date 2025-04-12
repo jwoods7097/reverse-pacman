@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # Training Logic
     start_time = datetime.now()
     print(f'Training started on {start_time.ctime()}')
-    model.learn(total_timesteps=100000)
+    model.learn(total_timesteps=5_000_000)
     end_time = datetime.now()
     print(f'Training ended on {end_time.ctime()}')
     print(f'Training lasted {end_time - start_time}')
@@ -32,6 +32,6 @@ if __name__ == "__main__":
     # Save model
     if not os.path.exists('trained_models'):
         os.makedirs('trained_models')
-    model.save(f'trained_models/pacman.zip')
+    model.save(f'trained_models/pacman_5m.zip')
     
     env.close()
