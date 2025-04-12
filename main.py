@@ -180,15 +180,15 @@ if __name__ == '__main__':
                         pacman.turn(Direction.DOWN)
                     if event.key == pygame.K_d:
                         pacman.turn(Direction.RIGHT)
-
-            if event.type == pygame.JOYAXISMOTION:
-                if joystick1.get_axis(0) and joystick1.get_axis(0) < -0.2:
+                    
+            if event.type == pygame.JOYHATMOTION:
+                if joystick1.get_hat(0) == (-1, 0):
                     pacman.turn(Direction.LEFT)
-                if joystick1.get_axis(0) and joystick1.get_axis(0) > 0.2:
+                if joystick1.get_hat(0) == (1, 0):
                     pacman.turn(Direction.RIGHT)
-                if joystick1.get_axis(1) and joystick1.get_axis(1) < -0.2:
+                if joystick1.get_hat(0) == (0, 1):
                     pacman.turn(Direction.UP)
-                if joystick1.get_axis(1) and joystick1.get_axis(1) > 0.2:
+                if joystick1.get_hat(0) == (0, -1):
                     pacman.turn(Direction.DOWN)
 
         # Set ghost movement directions
