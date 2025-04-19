@@ -295,7 +295,7 @@ if __name__ == '__main__':
                 "level":  level_obs
             }
             
-            action, _ = model.predict(state, deterministic=True)
+            action, _ = model.predict(state)
             pacman_dir = Direction(action)
             pacman.turn(pacman_dir)
             

@@ -178,12 +178,11 @@ class PacmanEnv(gym.Env):
                     on_collide_handler(self.ghosts)
                     self.blinky.set_dir(self.level, self.pacman.x, self.pacman.y)
                     self.pacman.lives -= 1
-                    reward = -100000
+                    reward = -1000
 
                     if self.pacman.lives == 0:
                         # ACTUAL GAME OVER --- MASSIVE NEGATIVE REWARD
                         terminated = True
-                        reward = -1000000
                     else:
                         # Lost Life, goes to reset --- MINOR NEGATIVE REWARD
                         self.time_elapsed = 0
@@ -191,8 +190,6 @@ class PacmanEnv(gym.Env):
                         for ghost in self.ghosts.values():
                             ghost.fright = False
                         (self.pacman.x, self.pacman.y) = PACMAN_LEAVE_POS
-                        reward = -100000
-
 
         check_collision()
 
