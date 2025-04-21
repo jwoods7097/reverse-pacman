@@ -19,7 +19,7 @@ if __name__ == "__main__":
         os.makedirs('logs')
 
     # AGENT SETUP
-    model = PPO("MultiInputPolicy", env, verbose=1, tensorboard_log='logs', device="cuda")
+    model = PPO("MultiInputPolicy", env, verbose=1, tensorboard_log='logs')
 
     # Training Logic
     start_time = datetime.now()
