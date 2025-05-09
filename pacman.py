@@ -10,7 +10,7 @@ class Pacman(Entity):
         self.timer = 0
         self.color = "yellow"
         self._dotsEaten = 0
-        self.lives = 3
+        self.lives = 1
         self.ghost_multiplier = 1
 
     @property

@@ -231,7 +231,7 @@ class PacmanEnv(gym.Env):
         # Initialization of pygame objects
         if self.window is None and self.render_mode == "human":
             pygame.init()
-            self.window = pygame.display.set_mode((LEVEL_WIDTH * TILE_PIXEL_SIZE, LEVEL_HEIGHT * TILE_PIXEL_SIZE))
+            self.window = pygame.display.set_mode((LEVEL_WIDTH * TILE_PIXEL_SIZE, LEVEL_HEIGHT * TILE_PIXEL_SIZE), pygame.FULLSCREEN | pygame.SCALED)
             pygame.display.set_caption("Reverse Pacman")
             
             sprite_sheet = Spritesheet("assets/sprites/pacman_sprites.png")

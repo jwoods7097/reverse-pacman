@@ -81,7 +81,7 @@ class Inky(Ghost):
         self.speed = 1.0
         self.scatter_target = (27, 34)
         self.color = "cyan"
-        self.pellet_max = 30
+        self.pellet_max = 0
 
     def set_dir(self, level, pacman_x, pacman_y, blinky_x, blinky_y, pacman_dir):
         if self.fright:
@@ -113,7 +113,7 @@ class Clyde(Ghost):
         self.speed = 1.0
         self.scatter_target = (0, 34)
         self.color = "orange"
-        self.pellet_max = 60
+        self.pellet_max = 0
 
     def set_dir(self, level, pacman_x, pacman_y):
         if self.fright:
@@ -135,7 +135,7 @@ class Pinky(Ghost):
         self.speed = 1.0
         self.scatter_target = (2, 0)
         self.color = "pink"
-        self.pellet_max = 5
+        self.pellet_max = 0
 
     def set_dir(self, level, pacman_x, pacman_y, pacman_dir):
         if self.fright:
